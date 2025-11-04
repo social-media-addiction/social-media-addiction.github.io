@@ -12,7 +12,7 @@ const AnalyzeData: React.FC = () => {
   const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
 
   useEffect(() => {
-    loadStudentData("/VI/data/dataset.csv").then((parsed: StudentRecord[]) => {
+    loadStudentData("/data/dataset.csv").then((parsed: StudentRecord[]) => {
       setData(parsed);
       setInsights(generateInsights(parsed));
     });

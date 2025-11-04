@@ -1,18 +1,30 @@
 import { NavLink, useLocation } from "react-router-dom";
 
-function Navbar() {
-  // const main_path = "/VI/";
+interface NavbarProps {
+  isDarkMode?: boolean; // optional flag
+}
+
+function Navbar({ isDarkMode = false }: NavbarProps) {
   const location = useLocation();
 
   const navLinkClass = (path: string) => {
     const isActive = location.pathname === path;
-    return `btn btn-ghost ${isActive ? "text-primary font-bold" : ""}`;
+    return `btn btn-ghost ${
+      isActive
+        ? isDarkMode
+          ? "text-teal-300 font-bold"
+          : "text-primary font-bold"
+        : ""
+    }`;
   };
 
   return (
-    <div className="navbar bg-base-200 shadow-sm z-12 fixed top-0 left-0 right-0">
+    <div
+      className={`navbar shadow-sm fixed top-0 left-0 right-0 z-20 transition-colors duration-300 ${
+        isDarkMode ? "bg-base-100/0. text-white" : "bg-base-200 text-black"
+      }`}
+    >
       <div className="navbar-start">
-        {/* <img src={} className="h-8 w-8 ml-5" /> */}
         <NavLink to="/" className="btn btn-ghost text-xl">
           Students' Social Media Addiction
         </NavLink>
@@ -54,7 +66,7 @@ function Navbar() {
 
       <div className="navbar-end">
         <div className="flex items-center gap-4 pr-4">
-          {/* Add buttons/icons here if needed */}
+          {/* Optional buttons/icons */}
         </div>
       </div>
     </div>

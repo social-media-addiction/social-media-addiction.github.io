@@ -7,7 +7,7 @@ const InterestingFinds: React.FC = () => {
   const [insights, setInsights] = useState<Insights | null>(null);
 
   useEffect(() => {
-    loadStudentData("/VI/data/dataset.csv").then((parsed: StudentRecord[]) => {
+    loadStudentData("/data/dataset.csv").then((parsed: StudentRecord[]) => {
       setData(parsed);
       setInsights(generateInsights(parsed));
     });
