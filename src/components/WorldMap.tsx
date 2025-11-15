@@ -80,7 +80,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect }) => 
 
         const colorDomain = [minVal ?? 0, maxVal ?? 1];
         const color = d3.scaleSequential(colorDomain, d3.interpolateRgb("#521db9", "#00e8a2"));
-        
+
         const projection = d3.geoEqualEarth().fitExtent([[2, marginTop + 2], [width - 2, height]], { type: "Sphere" });
         const path = d3.geoPath(projection);
 
@@ -141,7 +141,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect }) => 
             .style("display", "none");
 
         countryPaths
-            .on("mouseenter", (event, d: any) => {
+            .on("mouseenter", (d: any) => {
                 const val = valuemap.get(d.properties.name);
                 tooltipDiv
                     .style("display", "block")
