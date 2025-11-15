@@ -4,24 +4,6 @@ import { StudentRecord } from "../data/data";
 import { feature, mesh } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
 
-// Load and parse the world map data.
-const worldData = await d3.json(
-    "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"
-) as any;
-
-// Countries (filled shapes)
-const countriesData = feature(
-    worldData,
-    worldData.objects.countries
-) as unknown as FeatureCollection<Geometry, { name: string }>;
-
-// Mesh (borders only)
-const countryMeshData = mesh(
-    worldData,
-    worldData.objects.countries,
-    (a, b) => a !== b
-);
-
 interface WorldMapProps {
     studentData: StudentRecord[];
     onCountrySelect?: (country: string, value: number | undefined) => void;
@@ -66,10 +48,43 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect }) => 
     const containerRef = useRef<HTMLDivElement>(null);
 
     const [metric, setMetric] = useState<keyof StudentRecord>("Addicted_Score");
+    const [countriesData, setCountriesData] = useState<FeatureCollection<Geometry, { name: string }> | null>(null);
+    const [countryMeshData, setCountryMeshData] = useState<any | null>(null);
     const valuemap = aggregateByCountry(studentData, metric);
 
     useEffect(() => {
-        if (!svgRef.current || !containerRef.current) return;
+    async function loadMapData() {
+      try {
+        const worldData = await d3.json(
+          "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"
+        ) as any;
+
+        const countries = feature(
+          worldData,
+          worldData.objects.countries
+        ) as unknown as FeatureCollection<Geometry, { name: string }>;
+
+        const meshData = mesh(
+          worldData,
+          worldData.objects.countries,
+          (a, b) => a !== b
+        );
+
+        setCountriesData(countries);
+        setCountryMeshData(meshData);
+
+      } catch (error) {
+        console.error("Erro ao carregar dados do mapa:", error);
+      }
+    }
+
+    loadMapData();
+  }, []);
+
+    useEffect(() => {
+        if (!svgRef.current || !containerRef.current || !countriesData || !countryMeshData) {
+      return;
+    }
 
         const width = 928;
         const marginTop = 40;
@@ -141,11 +156,15 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect }) => 
             .style("display", "none");
 
         countryPaths
-            .on("mouseenter", (d: any) => {
+            .on("mouseenter", (event, d: any) => {
                 const val = valuemap.get(d.properties.name);
                 tooltipDiv
                     .style("display", "block")
                     .html(`<b>${d.properties.name}</b><br>${METRIC_OPTIONS.find(m => m.key === metric)?.label}: ${val?.toFixed(1) ?? "No data"}`);
+                const [x, y] = d3.pointer(event);
+                tooltipDiv
+                    .style("left", x + 3 + "px")
+                    .style("top", y + 3 + "px");
             })
             .on("mousemove", (event) => {
                 const [x, y] = d3.pointer(event);
