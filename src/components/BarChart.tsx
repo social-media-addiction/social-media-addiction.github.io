@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 
 export interface BarChartData {
@@ -9,17 +9,18 @@ export interface BarChartData {
 interface BarChartProps {
   data: BarChartData[];
   orientation?: 'vertical' | 'horizontal';
-  title: string;
 }
 
-const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', title }) => {
+const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical' }) => {
   const margin = { top: 20, right: 30, bottom: 40, left: 90 };
   const width = 600 - margin.left - margin.right;
   const height = 400 - margin.top - margin.bottom;
+  const xAxisRef = useRef<SVGGElement>(null);
+  const yAxisRef = useRef<SVGGElement>(null);
 
   const max = d3.max(data, d => d.value) || 0;
 
-  let xScale: d3.ScaleLinear<number, number> | d3.ScaleBand<string>;
+  let xScale: any;
   let yScale: d3.ScaleLinear<number, number> | d3.ScaleBand<string>;
 
   if (orientation === 'vertical') {
@@ -42,18 +43,35 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', tit
       .padding(0.1);
   }
 
+  useEffect(() => {
+    if (xAxisRef.current) {
+      if (orientation === 'vertical') {
+        d3.select(xAxisRef.current).call(d3.axisBottom(xScale as d3.ScaleBand<string>));
+      } else {
+        d3.select(xAxisRef.current).call(d3.axisBottom(xScale as d3.ScaleLinear<number, number>));
+      }
+    }
+    if (yAxisRef.current) {
+      if (orientation === 'vertical') {
+        d3.select(yAxisRef.current).call(d3.axisLeft(yScale as d3.ScaleLinear<number, number>));
+      } else {
+        d3.select(yAxisRef.current).call(d3.axisLeft(yScale as d3.ScaleBand<string>));
+      }
+    }
+  }, [xScale, yScale, orientation]);
+
   return (
       <svg width={width + margin.left + margin.right} height={height + margin.top + margin.bottom}>
         <g transform={`translate(${margin.left},${margin.top})`}>
           {orientation === 'vertical' ? (
             <>
-              <g transform={`translate(0,${height})`} ref={node => d3.select(node).call(d3.axisBottom(xScale as d3.ScaleBand<string>))} />
-              <g ref={node => d3.select(node).call(d3.axisLeft(yScale as d3.ScaleLinear<number, number>))} />
+              <g transform={`translate(0,${height})`} ref={xAxisRef} />
+              <g ref={yAxisRef} />
             </>
           ) : (
             <>
-              <g transform={`translate(0,${height})`} ref={node => d3.select(node).call(d3.axisBottom(xScale as d3.ScaleLinear<number, number>))} />
-              <g ref={node => d3.select(node).call(d3.axisLeft(yScale as d3.ScaleBand<string>))} />
+              <g transform={`translate(0,${height})`} ref={xAxisRef} />
+              <g ref={yAxisRef} />
             </>
           )}
           {data.map(d => (

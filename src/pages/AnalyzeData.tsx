@@ -84,7 +84,7 @@ const AnalyzeData: React.FC = () => {
               <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
             ))}
           </select>
-          <BarChart data={barChartData} title="" />
+          <BarChart data={barChartData} />
         </ChartContainer>
       </div>
     </div>
