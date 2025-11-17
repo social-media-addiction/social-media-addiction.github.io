@@ -17,7 +17,7 @@ export interface StudentRecord {
 }
 
 export interface FilterCriteria {
-  [key: string]: string | number | boolean | undefined;
+  [key: string]: (string | number | boolean | undefined) | (string | number | boolean)[];
 }
 
 export const filterData = (data: StudentRecord[], filters: FilterCriteria): StudentRecord[] => {
