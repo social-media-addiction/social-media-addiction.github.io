@@ -17,11 +17,11 @@ function App() {
   }, [location.pathname]);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col">
       <Navbar isDarkMode={isDarkMode} />
 
       <div
-        className={`min-h-screen transition-colors duration-300 `}
+        className={`flex-grow overflow-y-auto transition-colors duration-300 `}
       >
         <Routes>
           <Route path="/" element={<IntroductionPage />} />
@@ -30,7 +30,7 @@ function App() {
           <Route path="/explore-room" element={<ExploreRoom />} />
         </Routes>
       </div>
-    </>
+    </div>
   );
 }
 

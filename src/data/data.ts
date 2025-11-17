@@ -16,6 +16,36 @@ export interface StudentRecord {
   Addicted_Score: number;
 }
 
+export interface FilterCriteria {
+  [key: string]: string | number | boolean | undefined;
+}
+
+export const filterData = (data: StudentRecord[], filters: FilterCriteria): StudentRecord[] => {
+  return data.filter(record => {
+    for (const key in filters) {
+      if (filters.hasOwnProperty(key)) {
+        const filterValue = filters[key];
+        if (filterValue !== undefined) {
+          const recordValue = record[key as keyof StudentRecord];
+
+          if (Array.isArray(filterValue)) {
+            // If the filter value is an array, check if the record's value is included in the array
+            if (!filterValue.includes(recordValue)) {
+              return false;
+            }
+          } else {
+            // Otherwise, perform a direct comparison
+            if (recordValue !== filterValue) {
+              return false;
+            }
+          }
+        }
+      }
+    }
+    return true;
+  });
+};
+
 export interface Insights {
   avgUsage: number;
   avgSleep: number;

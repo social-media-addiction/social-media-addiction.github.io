@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as d3 from 'd3';
 
 export interface BoxPlotData {
@@ -19,22 +19,48 @@ interface BoxPlotProps {
 
 const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useLayoutEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight,
+        });
+      }
+    };
+
+    updateDimensions(); // Set initial dimensions
+
+    const observer = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
-    if (data.length === 0) return;
+    if (data.length === 0 || dimensions.width === 0 || dimensions.height === 0) return;
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    const margin = { top: 40, right: 30, bottom: 100, left: 70 };
-    const width = 700 - margin.left - margin.right;
-    const height = 450 - margin.top - margin.bottom;
+    const margin = { top: 20, right: 20, bottom: 60, left: 50 }; // Adjusted margins for responsiveness
+    const chartWidth = dimensions.width - margin.left - margin.right;
+    const chartHeight = dimensions.height - margin.top - margin.bottom;
 
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
     const y = d3.scaleLinear()
       .domain([0, yMax])
-      .range([height, 0]);
+      .range([chartHeight, 0]);
 
     const yAxis = d3.axisLeft(y).ticks(5);
     const yAxisG = g.append('g').call(yAxis);
@@ -46,13 +72,13 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
 
     const categories = data.map(d => d.key);
     const x = d3.scaleBand()
-      .range([0, width])
+      .range([0, chartWidth])
       .domain(categories)
       .padding(0.2);
 
     const xAxis = d3.axisBottom(x);
     const xAxisG = g.append('g')
-      .attr('transform', `translate(0,${height})`)
+      .attr('transform', `translate(0,${chartHeight})`)
       .call(xAxis);
       
     xAxisG.selectAll('text')
@@ -66,8 +92,8 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
 
     g.append("text")
         .attr("transform", "rotate(-90)")
-        .attr("y", 0 - margin.left + 20)
-        .attr("x",0 - (height / 2))
+        .attr("y", 0 - margin.left + 10) // Adjusted position
+        .attr("x",0 - (chartHeight / 2))
         .attr("dy", "1em")
         .style("text-anchor", "middle")
         .text("Avg Daily Usage (Hours)")
@@ -107,11 +133,11 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
         .attr('stroke-width', 2);
     });
 
-  }, [data, yMax]);
+  }, [data, yMax, dimensions]); // Re-run effect when dimensions change
 
   return (
-    <div>
-      <svg ref={svgRef} width="700" height="450"></svg>
+    <div ref={containerRef} style={{ width: '100%', height: '400px' }}> {/* Set a default height or make it dynamic */}
+      <svg ref={svgRef} width="100%" height="100%"></svg>
     </div>
   );
 };
