@@ -5,11 +5,8 @@ import Aurora from "../components/Aurora";
 import BoxPlot, { BoxPlotData } from '../components/BoxPlot';
 import ChartContainer from '../components/ChartContainer';
 import BarChart, { BarChartData } from '../components/BarChart';
-<<<<<<< HEAD
 import WorldMap from "../components/WorldMap";
-=======
 import MultiSelectDropdown from "../components/MultiSelectDropdown";
->>>>>>> 08a4b56 (adding filters and filter func to data.ts)
 
 const AnalyzeData: React.FC = () => {
   const [originalData, setOriginalData] = useState<StudentRecord[]>([]);
