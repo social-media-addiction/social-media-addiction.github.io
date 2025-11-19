@@ -138,14 +138,14 @@ export default function IntroductionPage() {
           <LogoTicker icons={logos1} duration={60} direction="left" />
           <LogoTicker icons={logos2} duration={60} direction="right" />
         </div>
-        
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9 }}
           className="z-10 max-w-2xl text-center md:text-center space-y-6"
         >
-          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight text-teal-400">
+          <h1 className="text-5xl md:text-7xl font-extrabold leading-tight text-[#69b3a2]">
             Students’ Social Media Addiction
           </h1>
 
@@ -168,30 +168,30 @@ export default function IntroductionPage() {
       </section>
 
       {/* MAIN CONTENT (All components are still here) */}
-      <main className="container mx-auto px-6 py-12 space-y-16">
-      <div id="dataset-overview"className="divider before:bg-gray-600 after:bg-gray-600"></div>
+      <main className="container mx-auto px-6 py-12 space-y-16 z-10 relative">
+        <div id="dataset-overview" className="divider before:bg-gray-600 after:bg-gray-600"></div>
         {/* DATASET OVERVIEW */}
         <section className="space-y-8">
-          <h2 className="text-4xl font-semibold text-center text-teal-300">
+          <h2 className="text-4xl font-semibold text-center text-[#69b3a2]">
             Dataset Overview
           </h2>
 
           {/* Timeline */}
-          <div  className="flex justify-center">
+          <div className="flex justify-center">
             <ul className="timeline timeline-snap-icon timeline-vertical w-full max-w-7xl">
 
               {/* Scope & Coverage */}
               <TimelineItem side="end">
                 <div className="timeline-middle">
-                  <div className="bg-teal-500 rounded-full w-4 h-4"></div>
+                  <div className="bg-[#69b3a2] rounded-full w-4 h-4"></div>
                 </div>
                 <div className="timeline-end mb-10 md:text-start">
-                  <div className="text-xl font-black text-teal-500">Scope & Coverage</div>
+                  <div className="text-xl font-black text-[#69b3a2]">Scope & Coverage</div>
                   <p className="mt-2">
-                    <b>Population:</b> Students aged 16–25.<br />
-                    <b>Geography:</b> Bangladesh, India, USA, UK, Canada, and more.<br />
-                    <b>Timeframe:</b> Q1 2025 online survey.<br />
-                    <b>Volume:</b> 705 entries after cleaning.
+                    - <b>Population:</b> Students aged 18–24.<br />
+                    - <b>Geography:</b> Bangladesh, India, USA, UK, Canada, and more.<br />
+                    - <b>Timeframe:</b> Q1 2025 online survey.<br />
+                    - <b>Volume:</b> 705 entries after cleaning.
                   </p>
                 </div>
                 <hr />
@@ -201,12 +201,12 @@ export default function IntroductionPage() {
               <TimelineItem side="start">
                 <hr />
                 <div className="timeline-middle">
-                  <div className="bg-teal-500 rounded-full w-4 h-4"></div>
+                  <div className="bg-[#69b3a2] rounded-full w-4 h-4"></div>
                 </div>
                 <div className="timeline-start md:mb-10 md:text-end">
-                  <div className="text-xl font-black text-teal-500">Data Collection & Methodology</div>
+                  <div className="text-xl font-black text-[#69b3a2]">Data Collection & Methodology</div>
                   <p className="mt-2">
-                    - Based on validated instruments like the Bergen Social Media Addiction Scale.<br />
+                    - Based on the Bergen Social Media Addiction Scale.<br />
                     - Recruited via universities and social media.
                   </p>
                 </div>
@@ -217,10 +217,10 @@ export default function IntroductionPage() {
               <TimelineItem side="end">
                 <hr />
                 <div className="timeline-middle">
-                  <div className="bg-teal-500 rounded-full w-4 h-4"></div>
+                  <div className="bg-[#69b3a2] rounded-full w-4 h-4"></div>
                 </div>
                 <div className="timeline-end mb-10 md:text-start">
-                  <div className="text-xl font-black text-teal-500">Data Quality Controls</div>
+                  <div className="text-xl font-black text-[#69b3a2]">Data Quality Controls</div>
                   <p className="mt-2">
                     - Range validation (0–24 hours/day).<br />
                     - De-duplication via Student_ID.<br />
@@ -231,18 +231,18 @@ export default function IntroductionPage() {
 
             </ul>
           </div>
-      <div id="dataset-overview"className="divider before:bg-gray-600 after:bg-gray-600"></div>
+          <div id="dataset-overview" className="divider before:bg-gray-600 after:bg-gray-600"></div>
 
           {/* KEY VARIABLES TABLE */}
           <div className="lg:col-span-3">
             {/* ... (Table component) ... */}
-            <h2 className="text-4xl font-semibold text-center text-teal-300 mb-6">
+            <h2 className="text-4xl font-semibold text-center text-[#69b3a2] mb-6">
               Key Variables
             </h2>
 
-            <div className="overflow-x-auto rounded-xl border border-gray-700 shadow-xl bg-[#3b254f]/60">
+            <div className="overflow-x-auto rounded-xl border border-gray-700 shadow-xl bg-gray-900/80">
               <table className="table w-full text-white">
-                <thead className="bg-[#4a2f52]/70 text-teal-200">
+                <thead className="bg-gray-900 text-[#69b3a2]">
                   <tr>
                     <th className="py-3 px-4 text-left font-semibold">Variable</th>
                     <th className="py-3 px-4 text-left font-semibold">Type</th>
@@ -251,10 +251,10 @@ export default function IntroductionPage() {
                 </thead>
                 <tbody>
                   {keyVariables.map((item) => (
-                    <tr key={item.variable} className="hover:bg-[#00000022]">
-                      <td className="py-3 px-4 font-mono text-sm text-teal-300">{item.variable}</td>
+                    <tr key={item.variable} className="hover:bg-gray-800">
+                      <td className="py-3 px-4 font-mono text-sm text-sky-300/90">{item.variable}</td>
                       <td className="py-3 px-4 text-sm">
-                        <span className="badge badge-outline text-teal-200 border-teal-300">{item.type}</span>
+                        <span className="badge badge-outline text-[#69b3a2] border-[#69b3a2]">{item.type}</span>
                       </td>
                       <td className="py-3 px-4 text-sm text-gray-200">{item.description}</td>
                     </tr>
@@ -265,19 +265,19 @@ export default function IntroductionPage() {
           </div>
 
         </section>
-      <div id="dataset-overview"className="divider before:bg-gray-600 after:bg-gray-600"></div>
+        <div id="dataset-overview" className="divider before:bg-gray-600 after:bg-gray-600"></div>
 
         {/* LIMITATIONS */}
-        <h2 className="text-4xl font-semibold text-center text-teal-500">
+        <h2 className="text-4xl font-semibold text-center text-[#69b3a2]">
           Limitations
         </h2>
 
         <section>
-        <details className="collapse collapse-arrow bg-[#3b254f]/60 border border-gray-700 shadow-lg">
-  <summary className="collapse-title font-semibold text-teal-300">Dataset Limitations</summary>
-  <div className="collapse-content text-md">- Self-report bias may affect accuracy.<br />- Cross-sectional — no causal inference.</div>
+          <details className="collapse collapse-arrow bg-gray-900/80 border border-gray-700 shadow-lg">
+            <summary className="collapse-title font-semibold text-[#69b3a2]">Dataset Limitations</summary>
+            <div className="collapse-content text-md">- Self-report bias may affect accuracy.<br />- Data collected at one point in time (no causal inference).</div>
 
-</details>
+          </details>
         </section>
 
       </main>

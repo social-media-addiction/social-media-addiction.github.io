@@ -82,8 +82,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
       .call(xAxis);
       
     xAxisG.selectAll('text')
-      .attr('transform', 'rotate(-45)')
-      .style('text-anchor', 'end')
+      .style('text-anchor', 'middle')
       .attr("fill", "white")
       .attr("font-size", 12);
 

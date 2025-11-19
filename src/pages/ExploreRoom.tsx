@@ -1,8 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ReactElement, useState, useEffect } from "react";
-import { Brain, Users, GraduationCap, Search } from "lucide-react";
+import { ReactElement, useState, useEffect, useMemo } from "react";
+import { Brain, Users, GraduationCap, Search, Globe, Clock4 } from "lucide-react";
 import bgVideo from "../assets/videos/bg-small.mp4";
-import RoomGraph from "../components/RoomGraph";
+import BarChart, { BarChartData } from '../components/BarChart';
+import { StudentRecord } from "../data/data";
+import * as d3 from 'd3';
 
 interface Hotspot {
   id: string;
@@ -16,8 +18,8 @@ interface Hotspot {
 const hotspots: Hotspot[] = [
   {
     id: "academic",
-    x: "25%",
-    y: "70%",
+    x: "8%",
+    y: "50%",
     icon: <GraduationCap size={40} color="#59cccaff" />,
     label: "Academic Performance",
     info:
@@ -25,8 +27,8 @@ const hotspots: Hotspot[] = [
   },
   {
     id: "relationships",
-    x: "88%",
-    y: "40%",
+    x: "50%",
+    y: "51%",
     icon: <Users size={28} color="#59cccaff" />,
     label: "Relationships",
     info:
@@ -34,13 +36,31 @@ const hotspots: Hotspot[] = [
   },
   {
     id: "mental-health",
-    x: "45%",
+    x: "46%",
     y: "72%",
     icon: <Brain size={28} color="#59cccaff" />,
     label: "Mental Health",
     info:
       "Prolonged screen time has been linked to anxiety and sleep issues. Limiting usage and mindful scrolling can support better mental well-being.",
   },
+  {
+    id: "daily-usage",
+    x: "30%",
+    y: "60%",
+    icon: <Clock4 size={28} color="#59cccaff" />,
+    label: "Daily Usage",
+    info:
+      "Understanding average daily social media usage helps identify patterns. Reducing screen time can free up hours for more fulfilling activities.",
+  },
+  {
+    id: "geographics",
+    x: "88%",
+    y: "40%",
+    icon: <Globe size={28} color="#59cccaff" />,
+    label: "Geographics",
+    info:
+      "Geographical data reveals how social media usage varies across different regions, highlighting cultural and regional trends.",
+  }
 ];
 
 export default function HeroVideo() {
@@ -58,6 +78,15 @@ export default function HeroVideo() {
   }, [zoomedSpot]);
 
   const selectedSpot = hotspots.find((s) => s.id === zoomedSpot);
+  const [barChartGrouping] = useState<keyof StudentRecord>('Academic_Level');
+  const [data] = useState<StudentRecord[]>([]);
+
+
+  const barChartData = useMemo((): BarChartData[] => {
+    if (data.length === 0) return [];
+    const counts = d3.rollup(data, v => v.length, d => d[barChartGrouping]);
+    return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
+  }, [data, barChartGrouping]);
 
   return (
     <div className="relative h-screen overflow-hidden">
@@ -71,23 +100,31 @@ export default function HeroVideo() {
         playsInline
         animate={{
           scale: zoomedSpot ? 2.2 : 1,
-          opacity: zoomedSpot ? 0.9: 1,
+          opacity: zoomedSpot ? 0.9 : 1,
           x:
             zoomedSpot === "academic"
-              ? "48%"
+              ? "60%"
               : zoomedSpot === "relationships"
-              ? "-55%"
-              : zoomedSpot === "mental-health"
-              ? "0%"
-              : "0%",
+                ? "0%"
+                : zoomedSpot === "mental-health"
+                  ? "0%"
+                  : zoomedSpot === "daily-usage"
+                    ? "48%"
+                      : zoomedSpot === "geographics"
+                        ? "-60%"
+                    : "0%",
           y:
             zoomedSpot === "academic"
-              ? "-25%"
+              ? "-5%"
               : zoomedSpot === "relationships"
-              ? "-10%"
-              : zoomedSpot === "mental-health"
-              ? "-30%"
-              : "0%",
+                ? "0%"
+                : zoomedSpot === "mental-health"
+                  ? "-30%"
+                    : zoomedSpot === "daily-usage"
+                      ? "-35%"
+                      : zoomedSpot === "geographics"
+                        ? "5%"
+                  : "0%",
         }}
         transition={{
           duration: 1.2,
@@ -123,9 +160,9 @@ export default function HeroVideo() {
               transition={{ duration: 0.4 }}
               onClick={() => setZoomedSpot(spot.id)}
             >
-              <div className="flex flex-col items-center space-y-1">
+              <div className="flex flex-col items-center space-y-1 text-shadow-[#69b3a2]/30" >
                 {spot.icon}
-                <span className="text-sm font-semibold text-teal-300">
+                <span className="text-sm font-semibold text-teal-300 text-shadow-[#69b3a2]/30" >
                   {spot.label}
                 </span>
               </div>
@@ -149,13 +186,13 @@ export default function HeroVideo() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-11/12 md:w-2/3 lg:w-1/2 z-40 bg-white/10 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
+            className="absolute bottom-40 left-1/2 transform -translate-x-1/2 w-11/12 md:w-2/3 lg:w-1/2 z-40 bg-white/10 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
           >
             <h3 className="text-xl font-bold text-teal-300 mb-3">
               {selectedSpot.label}
             </h3>
             <p className="text-base leading-relaxed">{selectedSpot.info}</p>
-            <RoomGraph />
+            <BarChart data={barChartData} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -169,7 +206,7 @@ export default function HeroVideo() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.4 }}
-            className="absolute top-5 right-5 z-50 btn btn-sm bg-teal-400 border-teal-400 text-black font-semibold shadow-lg"
+            className="absolute top-5 right-5 z-50 btn btn-sm bg-[#69b3a2] text-black font-semibold shadow-lg"
           >
             Exit Zoom
           </motion.button>

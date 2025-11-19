@@ -42,18 +42,21 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
     };
   }, []);
 
-  const displayLabel = selectedValues.length > 0
-    ? `${label}: ${selectedValues.length} selected`
-    : label;
-
   return (
     <div className="relative" ref={dropdownRef}>
       <button
         type="button"
-        className="flex justify-between items-center w-full bg-gray-700 text-white p-2 rounded cursor-pointer hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+        className="flex justify-between items-center w-full bg-gray-700/50 text-white p-2 rounded cursor-pointer hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
         onClick={handleToggle}
       >
-        <span>{displayLabel}</span>
+        <div className="flex items-center space-x-2 truncate">
+          <span className="truncate">{label}</span>
+          {selectedValues.length > 0 && (
+            <span className="inline-flex items-end justify-end px-2 py-0.5 rounded-full bg-[#69b3a2]/70 text-white text-xs font-medium">
+              {selectedValues.length}
+            </span>
+          )}
+        </div>
         <svg
           className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
           fill="none"

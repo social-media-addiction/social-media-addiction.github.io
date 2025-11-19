@@ -117,7 +117,7 @@ const InterestingFinds: React.FC = () => {
   const ageDistYScale = d3.scaleLinear().domain([0, d3.max(ageDistData.map(d => d[1])) ?? 0]).nice().range([height - margin.bottom, margin.top]);
 
   // --- Card Style ---
-  const cardStyle = "bg-[#3b254f]/60 border border-gray-700 shadow-lg rounded-lg p-6";
+  const cardStyle = "bg-gray-900 border border-gray-700 shadow-lg rounded-lg p-6";
 
   return (
     // --- 2. Add Main BG and Aurora ---
@@ -132,23 +132,23 @@ const InterestingFinds: React.FC = () => {
         {/* Key Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
           {/* --- 4. Restyle Cards --- */}
-          <div className="bg-[#3b254f]/60 border border-gray-700 p-4 rounded-lg">
+          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
             <div className="text-sm text-gray-300">Avg Daily Usage</div>
             <div className="text-2xl font-bold text-white">{insights.avgUsage.toFixed(2)}h</div>
           </div>
-          <div className="bg-[#3b254f]/60 border border-gray-700 p-4 rounded-lg">
+          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
             <div className="text-sm text-gray-300">Avg Sleep</div>
             <div className="text-2xl font-bold text-white">{insights.avgSleep.toFixed(1)}h</div>
           </div>
-          <div className="bg-[#3b254f]/60 border border-gray-700 p-4 rounded-lg">
+          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
             <div className="text-sm text-gray-300">Mental Health</div>
             <div className="text-2xl font-bold text-white">{insights.avgMentalHealth.toFixed(1)}</div>
           </div>
-          <div className="bg-[#3b254f]/60 border border-gray-700 p-4 rounded-lg">
+          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
             <div className="text-sm text-gray-300">Top Platform</div>
             <div className="text-2xl font-bold text-white">{insights.topPlatform}</div>
           </div>
-          <div className="bg-[#3b254f]/60 border border-gray-700 p-4 rounded-lg">
+          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
             <div className="text-sm text-gray-300">Addiction/Sleep</div>
             <div className="text-2xl font-bold text-white">{insights.addictionVsSleep.toFixed(2)}</div>
           </div>
@@ -158,7 +158,7 @@ const InterestingFinds: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
           {/* Gender Distribution */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Gender Distribution</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Gender Distribution</h3>
             <svg width={width} height={height} className="mx-auto">
               {genderData.map(([gender, count]) => (
                 <g key={gender}>
@@ -188,7 +188,7 @@ const InterestingFinds: React.FC = () => {
 
           {/* Platform Distribution */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Platform Popularity</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Platform Popularity</h3>
             <svg width={width} height={height} className="mx-auto">
               {platformData.map(([platform, count]) => (
                 <g key={platform}>
@@ -218,7 +218,7 @@ const InterestingFinds: React.FC = () => {
 
           {/* Usage by Age */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Usage by Age</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Usage by Age</h3>
             <svg width={width} height={height} className="mx-auto">
               <path
                 d={ageLine(ageData) || ""}
@@ -246,7 +246,7 @@ const InterestingFinds: React.FC = () => {
 
           {/* Mental Health vs Usage */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Mental Health vs Usage</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Mental Health vs Usage</h3>
             <svg width={width} height={height} className="mx-auto">
               {insights.mentalHealthByUsage.map((d, i) => (
                 <circle
@@ -268,7 +268,7 @@ const InterestingFinds: React.FC = () => {
 
           {/* Academic Impact */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Academic Impact</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Academic Impact</h3>
             <svg width={width} height={height} className="mx-auto">
               <g transform={`translate(${width / 2}, ${height / 2})`}>
                 {academicPie(academicData).map((slice, i) => (
@@ -297,7 +297,7 @@ const InterestingFinds: React.FC = () => {
 
           {/* Sleep vs Addiction */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Sleep vs Addiction</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Sleep vs Addiction</h3>
             <svg width={width} height={height} className="mx-auto">
               {insights.sleepVsAddiction.map((d, i) => (
                 <circle
@@ -319,7 +319,7 @@ const InterestingFinds: React.FC = () => {
 
           {/* Relationship Status */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Relationship Status</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Relationship Status</h3>
             <svg width={width} height={height} className="mx-auto">
               {relationshipData.map(([status, count]) => (
                 <g key={status}>
@@ -349,7 +349,7 @@ const InterestingFinds: React.FC = () => {
 
           {/* Age Distribution */}
           <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-teal-300">Age Distribution</h3>
+            <h3 className="text-xl font-semibold mb-4 text-sky-300">Age Distribution</h3>
             <svg width={width} height={height} className="mx-auto">
               {ageDistData.map(([age, count]) => (
                 <g key={age}>
@@ -381,10 +381,10 @@ const InterestingFinds: React.FC = () => {
 
         {/* Additional Insights */}
         <div className={`mt-8 ${cardStyle}`}>
-          <h2 className="text-2xl font-semibold mb-4 text-teal-300">Key Insights</h2>
+          <h2 className="text-2xl font-semibold mb-4 text-sky-300">Key Insights</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-200">
             <div>
-              <h4 className="font-semibold mb-3 text-lg text-teal-200">Usage Patterns</h4>
+              <h4 className="font-semibold mb-3 text-lg text-sky-200">Usage Patterns</h4>
               <ul className="space-y-2">
                 <li className="flex items-start"><span className="text-blue-400 mr-2">•</span>Average daily social media usage: <b className="ml-1 text-white">{insights.avgUsage.toFixed(2)} hours</b></li>
                 <li className="flex items-start"><span className="text-green-400 mr-2">•</span>Most popular platform: <b className="ml-1 text-white">{insights.topPlatform}</b></li>
@@ -392,7 +392,7 @@ const InterestingFinds: React.FC = () => {
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-3 text-lg text-teal-200">Health & Well-being</h4>
+              <h4 className="font-semibold mb-3 text-lg text-sky-200">Health & Well-being</h4>
               <ul className="space-y-2">
                 <li className="flex items-start"><span className="text-orange-400 mr-2">•</span>{((insights.academicImpact.yes / data.length) * 100).toFixed(1)}% report academic impact</li>
                 <li className="flex items-start"><span className="text-red-400 mr-2">•</span>Average mental health score: <b className="ml-1 text-white">{insights.avgMentalHealth.toFixed(1)}/10</b></li>

@@ -1,181 +1,128 @@
-import React, { useEffect, useState } from "react";
-import * as d3 from "d3";
-import { loadStudentData, generateInsights, StudentRecord, Insights } from "../data/data";
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import * as d3 from 'd3';
 
-const AnalyzeData: React.FC = () => {
-  const [data, setData] = useState<StudentRecord[]>([]);
-  const [insights, setInsights] = useState<Insights | null>(null);
+export interface BarChartData {
+  label: string;
+  value: number;
+}
 
-  // Hover tooltip state
-  const [hovered, setHovered] = useState<{x: number; y: number; text: string} | null>(null);
-  // Brushed points indices
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+interface BarChartProps {
+  data: BarChartData[];
+  orientation?: 'vertical' | 'horizontal';
+}
 
-  useEffect(() => {
-    loadStudentData("/data/dataset.csv").then((parsed: StudentRecord[]) => {
-      setData(parsed);
-      setInsights(generateInsights(parsed));
-    });
+const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical' }) => {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
+  useLayoutEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        setDimensions({
+          width: containerRef.current.offsetWidth,
+          height: containerRef.current.offsetHeight,
+        });
+      }
+    };
+
+    updateDimensions(); // Set initial dimensions
+
+    const observer = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => {
+      if (containerRef.current) {
+        observer.unobserve(containerRef.current);
+      }
+    };
   }, []);
 
-  if (!data.length || !insights) {
-    return <p className="p-6 text-gray-500">Loading insights...</p>;
+  const margin = { top: 20, right: 20, bottom: 60, left: 50 }; // Adjusted margins for responsiveness
+  const chartWidth = dimensions.width - margin.left - margin.right;
+  const chartHeight = dimensions.height - margin.top - margin.bottom;
+
+  const max = d3.max(data, d => d.value) || 0;
+
+  let xScale: any;
+  let yScale: d3.ScaleLinear<number, number> | d3.ScaleBand<string>;
+
+  if (orientation === 'vertical') {
+    xScale = d3.scaleBand<string>()
+      .domain(data.map(d => d.label))
+      .range([0, chartWidth])
+      .padding(0.1);
+
+    yScale = d3.scaleLinear()
+      .domain([0, max])
+      .range([chartHeight, 0]);
+  } else {
+    xScale = d3.scaleLinear()
+      .domain([0, max])
+      .range([0, chartWidth]);
+
+    yScale = d3.scaleBand<string>()
+      .domain(data.map(d => d.label))
+      .range([0, chartHeight])
+      .padding(0.1);
   }
 
-  const width = 700;
-  const height = 450;
-  const margin = { top: 40, right: 30, bottom: 60, left: 70 };
+  useEffect(() => {
+    if (dimensions.width === 0 || dimensions.height === 0) return;
 
-  const renderAxis = (xScale: any, yScale: any, xLabel: string, yLabel: string, xType: 'band' | 'linear' = 'linear') => {
-    const xAxis = xType === 'band' 
-      ? d3.axisBottom(xScale)
-      : d3.axisBottom(xScale).ticks(5);
-    
-    const yAxis = d3.axisLeft(yScale).ticks(5);
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove(); // Clear previous chart elements
 
-    return (
-      <>
-        <g
-          transform={`translate(0, ${height - margin.bottom})`}
-          ref={node => { if (node) d3.select(node).call(xAxis as any); }}
-          fontSize={12}
-        />
-        <g
-          transform={`translate(${margin.left}, 0)`}
-          ref={node => { if (node) d3.select(node).call(yAxis as any); }}
-          fontSize={12}
-        />
-        <text x={width / 2} y={height - 15} textAnchor="middle" fontSize={13} fill="#666" fontWeight="500">
-          {xLabel}
-        </text>
-        <text transform={`rotate(-90) translate(-${height / 2}, 20)`} textAnchor="middle" fontSize={13} fill="#666" fontWeight="500">
-          {yLabel}
-        </text>
-      </>
-    );
-  };
+    const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
-  // Scales for Sleep vs Addiction
-  const sleepXScale = d3.scaleLinear()
-    .domain(d3.extent(insights.sleepVsAddiction.map(d => d.sleep)) as [number, number])
-    .range([margin.left, width - margin.right]);
+    if (orientation === 'vertical') {
+      g.append('g')
+        .attr('transform', `translate(0,${chartHeight})`)
+        .call(d3.axisBottom(xScale as d3.ScaleBand<string>))
+        .selectAll("text")
+        .attr("fill", "white")
+        .attr("font-size", 12);
+      g.append('g')
+        .call(d3.axisLeft(yScale as d3.ScaleLinear<number, number>))
+        .selectAll("text")
+        .attr("fill", "white")
+        .attr("font-size", 12);
+    } else {
+      g.append('g')
+        .attr('transform', `translate(0,${chartHeight})`)
+        .call(d3.axisBottom(xScale as d3.ScaleLinear<number, number>))
+        .selectAll("text")
+        .attr("fill", "white")
+        .attr("font-size", 12);
+      g.append('g')
+        .call(d3.axisLeft(yScale as d3.ScaleBand<string>))
+        .selectAll("text")
+        .attr("fill", "white")
+        .attr("font-size", 12);
+    }
 
-  const sleepYScale = d3.scaleLinear()
-    .domain(d3.extent(insights.sleepVsAddiction.map(d => d.addiction)) as [number, number])
-    .range([height - margin.bottom, margin.top]);
+    g.selectAll(".domain, .tick line")
+      .attr("stroke", "white");
+
+    g.selectAll('.bar')
+      .data(data)
+      .enter().append('rect')
+      .attr('class', 'bar')
+      .attr('x', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>)(d.label)! : xScale(0))
+      .attr('y', d => orientation === 'vertical' ? (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>)(d.label)!)
+      .attr('width', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : (xScale as d3.ScaleLinear<number, number>)(d.value))
+      .attr('height', d => orientation === 'vertical' ? chartHeight - (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>).bandwidth())
+      .attr('fill', '#69b3a2');
+
+  }, [data, orientation, dimensions]);
 
   return (
-    <div className="relative container mx-auto px-4 py-8 overflow-x-auto">
-      <h1 className="text-3xl font-bold mb-6 text-blue-700">Social Media Usage Analysis</h1>
-
-      {/* Scatter Plot: Sleep vs Addiction with Brushing */}
-    <div className="bg-white bg-opacity-80 p-6 rounded-lg border border-gray-200 shadow-sm relative overflow-x-auto">
-      <h3 className="text-xl font-semibold mb-4 text-indigo-600">Sleep vs Addiction</h3>
-
-      <svg width={width} height={height} className="mx-auto">
-        {/* Brushing Layer */}
-        <g
-        ref={node => {
-          if (!node) return;
-          const brush = d3.brush()
-            .extent([[margin.left, margin.top], [width - margin.right, height - margin.bottom]])
-            .on("brush end", (event) => {
-            if (event.selection) {
-              const [[x0, y0], [x1, y1]] = event.selection;
-              const selected = insights.sleepVsAddiction
-                .map((_, i) => i)
-                .filter(i => {
-                const cx = sleepXScale(insights.sleepVsAddiction[i].sleep);
-                const cy = sleepYScale(insights.sleepVsAddiction[i].addiction);
-                return cx >= x0 && cx <= x1 && cy >= y0 && cy <= y1;
-                });
-              setSelectedIndices(selected);
-            } else {
-              setSelectedIndices([]);
-            }
-            });
-          d3.select(node).call(brush as any);
-        }}
-        />
-
-        {/* Points */}
-        {insights.sleepVsAddiction.map((d, i) => {
-        const hasSelection = selectedIndices.length > 0;
-        const isSelected = !hasSelection || selectedIndices.includes(i);
-        const fill = isSelected ? "#6366f1" : "#c7c8ff";
-        const stroke = hasSelection && selectedIndices.includes(i) ? "#f59e0b" : "none";
-        const opacity = hasSelection ? (isSelected ? 0.95 : 0.15) : 0.8;
-        const r = selectedIndices.includes(i) ? 7 : 6;
-
-        return (
-          <circle
-            key={i}
-            cx={sleepXScale(d.sleep)}
-            cy={sleepYScale(d.addiction)}
-            r={r}
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={stroke === "none" ? 0 : 2}
-            opacity={opacity}
-            className="transition-opacity"
-            style={{ transition: "opacity 150ms, r 150ms, stroke 150ms, fill 150ms" }}
-            onMouseEnter={(e) => {
-            const container = e.currentTarget.closest(".relative") as HTMLElement;
-            if (!container) return;
-            const rect = container.getBoundingClientRect();
-
-            setHovered({
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-              text: `Sleep: ${d.sleep}, Addiction: ${d.addiction}`
-            });
-            }}
-            onMouseMove={(e) => {
-            const container = e.currentTarget.closest(".relative") as HTMLElement;
-            if (!container) return;
-            const rect = container.getBoundingClientRect();
-
-            setHovered({
-              x: e.clientX - rect.left,
-              y: e.clientY - rect.top,
-              text: `Sleep: ${d.sleep}, Addiction: ${d.addiction}`
-            });
-            }}
-            onMouseLeave={() => setHovered(null)}
-          />
-        );
-        })}
-
-        {renderAxis(sleepXScale, sleepYScale, "Sleep Hours/Night", "Addiction Score")}
-        <text
-        x={width - margin.right}
-        y={margin.top}
-        textAnchor="end"
-        fontSize={13}
-        fill="#666"
-        fontWeight="500"
-        >
-        Correlation Analysis
-        </text>
-      </svg>
-
-      {/* HTML Tooltip */}
-      {hovered && (
-        <div
-        className="absolute bg-white border px-2 py-1 text-sm rounded shadow whitespace-nowrap pointer-events-none"
-        style={{
-          left: hovered.x + 10,
-          top: hovered.y - 30,
-          zIndex: 10,
-        }}
-        >
-        {hovered.text}
-        </div>
-      )}
-    </div>
+    <div ref={containerRef} style={{ width: '100%', height: '400px' }}> {/* Set a default height or make it dynamic */}
+      <svg ref={svgRef} width="100%" height="100%"></svg>
     </div>
   );
 };
 
-export default AnalyzeData;
-
+export default BarChart;

@@ -6,12 +6,15 @@ import BoxPlot, { BoxPlotData } from '../components/BoxPlot';
 import ChartContainer from '../components/ChartContainer';
 import BarChart, { BarChartData } from '../components/BarChart';
 import WorldMap from "../components/WorldMap";
-import MultiSelectDropdown from "../components/MultiSelectDropdown";
+import FilterSidebar from "../components/FilterSideBar";
 
 const AnalyzeData: React.FC = () => {
   const [originalData, setOriginalData] = useState<StudentRecord[]>([]);
   const [activeFilters, setActiveFilters] = useState<FilterCriteria>({});
-  const [data, setData] = useState<StudentRecord[]>([]); // This will now hold the filtered data
+  const [data, setData] = useState<StudentRecord[]>([]);
+  
+  // New State for Tabs
+  const [activeTab, setActiveTab] = useState<string>('Platform Usage');
 
   useEffect(() => {
     loadStudentData("/data/dataset.csv").then((parsed: StudentRecord[]) => {
@@ -26,11 +29,10 @@ const AnalyzeData: React.FC = () => {
   const [boxPlotGrouping, setBoxPlotGrouping] = useState<keyof StudentRecord>('Academic_Level');
   const [barChartGrouping, setBarChartGrouping] = useState<keyof StudentRecord>('Academic_Level');
 
+  // --- Data Processing Memoization ---
   const boxPlotData = useMemo((): BoxPlotData[] => {
     if (data.length === 0) return [];
-
     const groupedData = d3.group(data, d => d[boxPlotGrouping]);
-
     return Array.from(groupedData, ([key, group]) => {
       const values = group.map(d => d.Avg_Daily_Usage_Hours).sort(d3.ascending);
       const q1 = d3.quantile(values, 0.25)!;
@@ -39,55 +41,17 @@ const AnalyzeData: React.FC = () => {
       const interQuantileRange = q3 - q1;
       const min = Math.max(0, q1 - 1.5 * interQuantileRange);
       const max = Math.min(d3.max(values)!, q3 + 1.5 * interQuantileRange);
-
       return { key: String(key), values: { q1, median, q3, min, max } };
     });
   }, [data, boxPlotGrouping]);
 
   const barChartData = useMemo((): BarChartData[] => {
     if (data.length === 0) return [];
-
     const counts = d3.rollup(data, v => v.length, d => d[barChartGrouping]);
     return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
   }, [data, barChartGrouping]);
 
   const yMax = useMemo(() => d3.max(data, d => d.Avg_Daily_Usage_Hours) || 0, [data]);
-
-  const filterableProperties: (keyof StudentRecord)[] = [
-    'Gender',
-    'Academic_Level',
-    'Most_Used_Platform',
-    'Relationship_Status',
-    'Country',
-  ];
-
-  const uniqueFilterValues = useMemo(() => {
-    const values: { [key: string]: Set<string | number | boolean> } = {};
-    filterableProperties.forEach(prop => {
-      values[prop as string] = new Set(originalData.map(d => d[prop]));
-    });
-    return values;
-  }, [originalData, filterableProperties]);
-
-  const handleFilterChange = (property: keyof StudentRecord, selectedValues: (string | number | boolean)[]) => {
-    setActiveFilters(prevFilters => {
-      const newFilters = { ...prevFilters };
-      if (selectedValues.length > 0) {
-        newFilters[property] = selectedValues;
-      } else {
-        delete newFilters[property];
-      }
-      return newFilters;
-    });
-  };
-
-  const handleClearFilter = (property: keyof StudentRecord) => {
-    setActiveFilters(prevFilters => {
-      const newFilters = { ...prevFilters };
-      delete newFilters[property];
-      return newFilters;
-    });
-  };
 
   const boxPlotGroupingOptions: (keyof StudentRecord)[] = [
     'Academic_Level',
@@ -101,54 +65,108 @@ const AnalyzeData: React.FC = () => {
     'Most_Used_Platform',
   ];
 
+  const tabs = [
+    'Platform Usage',
+    'Academic Performance',
+    'Mental Health',
+    'Relationships',
+  ];
+
   return (
-    <div className="relative min-h-screen pt-20 text-white bg-gradient-to-b from-[#1a0d26] via-[#2a1a3a] to-[#1a0d26] overflow-x-hidden">
+    <div className="relative min-h-screen pt-24 text-white bg-gradient-to-b from-[#1a0d26] via-[#2a1a3a] to-[#1a0d26] overflow-hidden">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Aurora blend={0.5} amplitude={1.2} speed={0.5} />
       </div>
-      <div className="relative z-10 container mx-auto px-4 pt-20">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {filterableProperties.map(prop => (
-            <MultiSelectDropdown
-              key={prop}
-              label={prop.replace(/_/g, ' ')}
-              options={Array.from(uniqueFilterValues[prop as string] || [])}
-              selectedValues={Array.isArray(activeFilters[prop]) ? (activeFilters[prop] as (string | number | boolean)[]) : []}
-              onChange={(selected) => handleFilterChange(prop, selected)}
-              onClear={() => handleClearFilter(prop)}
-            />
+
+      <div className="relative z-10 container mx-auto px-4 pb-10 h-[calc(100vh-6rem)] flex flex-col">
+
+        {/* --- TABS --- */}
+        <div className="flex space-x-1 mb-4 bg-gray-900/40 p-1 rounded-lg w-fit backdrop-blur-sm border border-white/10">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                activeTab === tab 
+                  ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              {tab}
+            </button>
           ))}
         </div>
-        <ChartContainer title="Usage by Demographics (Box Plot)" className="mt-8">
-          <select
-            onChange={(e) => setBoxPlotGrouping(e.target.value as keyof StudentRecord)}
-            value={boxPlotGrouping}
-            className="bg-gray-700 text-white p-2 rounded mb-4"
-          >
-            {boxPlotGroupingOptions.map(opt => (
-              <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
-            ))}
-          </select>
-          <BoxPlot data={boxPlotData} yMax={yMax} />
-        </ChartContainer>
-        <ChartContainer title="Count by Demographics (Bar Chart)" className="mt-8">
-          <select
-            onChange={(e) => setBarChartGrouping(e.target.value as keyof StudentRecord)}
-            value={barChartGrouping}
-            className="bg-gray-700 text-white p-2 rounded mb-4"
-          >
-            {barChartGroupingOptions.map(opt => (
-              <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
-            ))}
-          </select>
-          <BarChart data={barChartData} />
-        </ChartContainer>
-        <ChartContainer title="Metric by Demographics (Country Map)" className="mt-8 mx-auto">
-          <WorldMap
-            studentData={data}
+
+        <div className="flex flex-col lg:flex-row gap-6 flex-1 overflow-hidden">
+
+          <FilterSidebar
+            originalData={originalData}
+            data={data}
+            activeFilters={activeFilters}
+            setActiveFilters={setActiveFilters}
           />
-        </ChartContainer>
+
+          <div className="flex-1 flex flex-col overflow-hidden rounded-lg shadow-lg">
+
+          {/* --- CHARTS (Dense Grid) --- */}
+            <main className="flex-1 min-w-0 overflow-auto pr-1 scrollbar-thin scrollbar-thumb-gray-700">
+            {/* Using a Grid layout to fit more charts on one page. 
+               2 columns on large screens, gaps increased to avoid overlap. 
+            */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              
+              <div className="h-[560px]"> {/* Increased fixed height container for uniformity */}
+              <ChartContainer title="Usage (Box Plot)">
+                <div className="mb-2 flex items-center justify-end">
+                 <select
+                  onChange={(e) => setBoxPlotGrouping(e.target.value as keyof StudentRecord)}
+                  value={boxPlotGrouping}
+                  className="bg-gray-700/50 text-white py-1 px-2 rounded border border-white/10 text-xs"
+                >
+                  {boxPlotGroupingOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
+                  ))}
+                </select>
+                </div>
+                <div className="h-[400px]"> {/* Larger internal chart area */}
+                <BoxPlot data={boxPlotData} yMax={yMax} />
+                </div>
+              </ChartContainer>
+              </div>
+
+              <div className="h-[480px]">
+              <ChartContainer title="Demographics (Bar Chart)">
+                <div className="mb-2 flex items-center justify-end">
+                <select
+                  onChange={(e) => setBarChartGrouping(e.target.value as keyof StudentRecord)}
+                  value={barChartGrouping}
+                  className="bg-gray-700/50 text-white py-1 px-2 rounded border border-white/10 text-xs"
+                >
+                  {barChartGroupingOptions.map(opt => (
+                  <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
+                  ))}
+                </select>
+                </div>
+                <div className="h-[400px]">
+                <BarChart data={barChartData} />
+                </div>
+              </ChartContainer>
+              </div>
+
+              {/* Map Spans full width on bottom */}
+              <div className="h-[640px] xl:col-span-2">
+              <ChartContainer title="Geographic Distribution">
+                <div className="h-[590px] overflow-hidden">
+                <WorldMap studentData={data} />
+                </div>
+              </ChartContainer>
+              </div>
+
+            </div>
+            </main>
+        </div>
       </div>
+    </div>
     </div>
   );
 };
