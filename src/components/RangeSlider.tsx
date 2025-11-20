@@ -12,6 +12,9 @@ interface RangeSliderProps {
 const RangeSlider: React.FC<RangeSliderProps> = ({ label, min, max, initialMin, initialMax, onChange }) => {
   const [low, setLow] = useState<number>(initialMin);
   const [high, setHigh] = useState<number>(initialMax);
+  const [isDraggingLow, setIsDraggingLow] = useState(false);
+  const [isDraggingHigh, setIsDraggingHigh] = useState(false);
+  const [activeThumb, setActiveThumb] = useState<'low' | 'high' | null>(null);
 
   // Sync internal state with external props on filter reset/change
   useEffect(() => {
@@ -39,6 +42,26 @@ const RangeSlider: React.FC<RangeSliderProps> = ({ label, min, max, initialMin, 
     setHigh(newHigh);
     onChange(low, newHigh);
   };
+
+  const handleLowMouseDown = () => {
+    setIsDraggingLow(true);
+    setActiveThumb('low');
+  };
+
+  const handleLowMouseUp = () => {
+    setIsDraggingLow(false);
+    setActiveThumb(null);
+  };
+
+  const handleHighMouseDown = () => {
+    setIsDraggingHigh(true);
+    setActiveThumb('high');
+  };
+
+  const handleHighMouseUp = () => {
+    setIsDraggingHigh(false);
+    setActiveThumb(null);
+  };
   
   // Custom CSS for double range slider to hide default tracks and style the thumb
   const sliderStyles = `
@@ -60,26 +83,47 @@ const RangeSlider: React.FC<RangeSliderProps> = ({ label, min, max, initialMin, 
     .range-input::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: #69b3a2;
       cursor: pointer;
       pointer-events: all;
       border: 3px solid #1f2937;
-      box-shadow: 0 0 2px rgba(0,0,0,0.5);
-      transition: background 0.15s ease-in-out;
+      box-shadow: 0 0 4px rgba(0,0,0,0.5);
+      transition: all 0.2s ease-in-out;
+    }
+
+    .range-input:hover::-webkit-slider-thumb {
+      transform: scale(1.15);
+      box-shadow: 0 0 8px rgba(105, 179, 162, 0.6);
+    }
+
+    .range-input:active::-webkit-slider-thumb {
+      transform: scale(1.25);
+      box-shadow: 0 0 12px rgba(105, 179, 162, 0.8);
     }
 
     /* Firefox/Edge thumb styles (for completeness) */
     .range-input::-moz-range-thumb, .range-input::-ms-thumb {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
       background: #69b3a2;
       cursor: pointer;
       pointer-events: all;
       border: 3px solid #1f2937; 
+      transition: all 0.2s ease-in-out;
+    }
+
+    .range-input:hover::-moz-range-thumb,
+    .range-input:hover::-ms-thumb {
+      transform: scale(1.15);
+    }
+
+    .range-input:active::-moz-range-thumb,
+    .range-input:active::-ms-thumb {
+      transform: scale(1.25);
     }
     
     /* Hide default track for all browsers */
@@ -100,7 +144,7 @@ const RangeSlider: React.FC<RangeSliderProps> = ({ label, min, max, initialMin, 
       <label className="text-sm text-gray-300 block mb-4">{label}</label>
       
       {/* Slider Track Area */}
-      <div className="relative h-4 mt-2">
+      <div className="relative h-4 mt-2 mb-8">
         {/* Visual Background Track */}
         <div className="absolute w-full h-1 bg-gray-700 rounded-full top-1/2 -translate-y-1/2"></div>
         
@@ -113,7 +157,33 @@ const RangeSlider: React.FC<RangeSliderProps> = ({ label, min, max, initialMin, 
           }}
         ></div>
 
-        {/* Low Handle Input (z-index ensures it's clickable) */}
+        {/* Low Handle Tooltip - only show when dragging */}
+        {isDraggingLow && (
+          <div
+            className="absolute -top-10 transform -translate-x-1/2 transition-all duration-150 opacity-100 scale-110 pointer-events-none"
+            style={{ left: `${lowPercent}%` }}
+          >
+            <div className="bg-[#69b3a2] text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+              {low}
+            </div>
+            <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#69b3a2] mx-auto"></div>
+          </div>
+        )}
+
+        {/* High Handle Tooltip - only show when dragging */}
+        {isDraggingHigh && (
+          <div
+            className="absolute -top-10 transform -translate-x-1/2 transition-all duration-150 opacity-100 scale-110 pointer-events-none"
+            style={{ left: `${highPercent}%` }}
+          >
+            <div className="bg-[#69b3a2] text-white text-xs font-bold px-2 py-1 rounded shadow-lg whitespace-nowrap">
+              {high}
+            </div>
+            <div className="w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-[#69b3a2] mx-auto"></div>
+          </div>
+        )}
+
+        {/* Low Handle Input - dynamic z-index based on position and interaction */}
         <input
           type="range"
           min={min}
@@ -121,10 +191,17 @@ const RangeSlider: React.FC<RangeSliderProps> = ({ label, min, max, initialMin, 
           value={low}
           step={1}
           onChange={handleLowChange}
-          className="range-input z-20"
+          onMouseDown={handleLowMouseDown}
+          onMouseUp={handleLowMouseUp}
+          onTouchStart={handleLowMouseDown}
+          onTouchEnd={handleLowMouseUp}
+          className="range-input"
+          style={{ 
+            zIndex: activeThumb === 'low' ? 30 : (low === high && high === max ? 25 : 20)
+          }}
         />
 
-        {/* High Handle Input */}
+        {/* High Handle Input - dynamic z-index based on position and interaction */}
         <input
           type="range"
           min={min}
@@ -132,31 +209,27 @@ const RangeSlider: React.FC<RangeSliderProps> = ({ label, min, max, initialMin, 
           value={high}
           step={1}
           onChange={handleHighChange}
-          className="range-input z-20"
+          onMouseDown={handleHighMouseDown}
+          onMouseUp={handleHighMouseUp}
+          onTouchStart={handleHighMouseDown}
+          onTouchEnd={handleHighMouseUp}
+          className="range-input"
+          style={{ 
+            zIndex: activeThumb === 'high' ? 30 : (low === high && low === min ? 25 : 20)
+          }}
         />
       </div>
       
       {/* Custom Value Display (Min/Max/Chosen Low/Chosen High) */}
       <div className="text-xs mt-4 flex justify-between font-mono">
-        <div className="flex-1 text-left text-gray-200">
-            <span className="font-bold"></span> {min}
+        <div className="flex-1 text-left text-gray-400">
+            <span className="font-bold">Min:</span> {min}
         </div>
-        <div className="flex-1 relative">
-          <div
-            className="absolute top-0 transform -translate-x-1/2 text-sky-300"
-            style={{ left: `${lowPercent}%` }}
-          >
-            {low}
-          </div>
-          <div
-            className="absolute top-0 transform -translate-x-1/2 text-sky-300"
-            style={{ left: `${highPercent}%` }}
-          >
-            {high}
-          </div>
+        <div className="flex-1 text-center text-sky-300 font-bold">
+            {low} - {high}
         </div>
-        <div className="flex-1 text-right text-gray-200">
-            <span className="font-bold"></span> {max}
+        <div className="flex-1 text-right text-gray-400">
+            <span className="font-bold">Max:</span> {max}
         </div>
       </div>
     </div>

@@ -70,6 +70,7 @@ const AnalyzeData: React.FC = () => {
     'Academic Performance',
     'Mental Health',
     'Relationships',
+    'Geographic',
   ];
 
   return (
@@ -110,59 +111,60 @@ const AnalyzeData: React.FC = () => {
 
           {/* --- CHARTS (Dense Grid) --- */}
             <main className="flex-1 min-w-0 overflow-auto pr-1 scrollbar-thin scrollbar-thumb-gray-700">
-            {/* Using a Grid layout to fit more charts on one page. 
-               2 columns on large screens, gaps increased to avoid overlap. 
-            */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              
-              <div className="h-[560px]"> {/* Increased fixed height container for uniformity */}
-              <ChartContainer title="Usage (Box Plot)">
-                <div className="mb-2 flex items-center justify-end">
-                 <select
-                  onChange={(e) => setBoxPlotGrouping(e.target.value as keyof StudentRecord)}
-                  value={boxPlotGrouping}
-                  className="bg-gray-700/50 text-white py-1 px-2 rounded border border-white/10 text-xs"
-                >
-                  {boxPlotGroupingOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
-                  ))}
-                </select>
-                </div>
-                <div className="h-[400px]"> {/* Larger internal chart area */}
-                <BoxPlot data={boxPlotData} yMax={yMax} />
-                </div>
-              </ChartContainer>
+            
+            {activeTab === 'Geographic' ? (
+              /* Geographic Tab - Only Map */
+              <div className="h-full">
+                <ChartContainer title="Geographic Distribution">
+                  <div className="h-[calc(100vh-14rem)] overflow-hidden">
+                    <WorldMap studentData={data} />
+                  </div>
+                </ChartContainer>
               </div>
+            ) : (
+              /* Other Tabs - Box Plot and Bar Chart */
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                
+                <div className="h-[560px]">
+                <ChartContainer title="Usage (Box Plot)">
+                  <div className="mb-2 flex items-center justify-end">
+                   <select
+                    onChange={(e) => setBoxPlotGrouping(e.target.value as keyof StudentRecord)}
+                    value={boxPlotGrouping}
+                    className="bg-gray-700/50 text-white py-1 px-2 rounded border border-white/10 text-xs"
+                  >
+                    {boxPlotGroupingOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
+                    ))}
+                  </select>
+                  </div>
+                  <div className="h-[400px]">
+                  <BoxPlot data={boxPlotData} yMax={yMax} />
+                  </div>
+                </ChartContainer>
+                </div>
 
-              <div className="h-[480px]">
-              <ChartContainer title="Demographics (Bar Chart)">
-                <div className="mb-2 flex items-center justify-end">
-                <select
-                  onChange={(e) => setBarChartGrouping(e.target.value as keyof StudentRecord)}
-                  value={barChartGrouping}
-                  className="bg-gray-700/50 text-white py-1 px-2 rounded border border-white/10 text-xs"
-                >
-                  {barChartGroupingOptions.map(opt => (
-                  <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
-                  ))}
-                </select>
+                <div className="h-[480px]">
+                <ChartContainer title="Demographics (Bar Chart)">
+                  <div className="mb-2 flex items-center justify-end">
+                  <select
+                    onChange={(e) => setBarChartGrouping(e.target.value as keyof StudentRecord)}
+                    value={barChartGrouping}
+                    className="bg-gray-700/50 text-white py-1 px-2 rounded border border-white/10 text-xs"
+                  >
+                    {barChartGroupingOptions.map(opt => (
+                    <option key={opt} value={opt}>{opt.replace(/_/g, ' ')}</option>
+                    ))}
+                  </select>
+                  </div>
+                  <div className="h-[400px]">
+                  <BarChart data={barChartData} />
+                  </div>
+                </ChartContainer>
                 </div>
-                <div className="h-[400px]">
-                <BarChart data={barChartData} />
-                </div>
-              </ChartContainer>
+
               </div>
-
-              {/* Map Spans full width on bottom */}
-              <div className="h-[640px] xl:col-span-2">
-              <ChartContainer title="Geographic Distribution">
-                <div className="h-[590px] overflow-hidden">
-                <WorldMap studentData={data} />
-                </div>
-              </ChartContainer>
-              </div>
-
-            </div>
+            )}
             </main>
         </div>
       </div>

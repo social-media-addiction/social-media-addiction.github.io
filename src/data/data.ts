@@ -29,9 +29,18 @@ export const filterData = (data: StudentRecord[], filters: FilterCriteria): Stud
           const recordValue = record[key as keyof StudentRecord];
 
           if (Array.isArray(filterValue)) {
-            // If the filter value is an array, check if the record's value is included in the array
-            if (!filterValue.includes(recordValue)) {
-              return false;
+            // Special handling for range filters (like Age)
+            if (key === 'Age' && filterValue.length === 2 && typeof filterValue[0] === 'number' && typeof filterValue[1] === 'number') {
+              // Range filter: check if value is between min and max
+              const [minVal, maxVal] = filterValue as [number, number];
+              if (typeof recordValue === 'number' && (recordValue < minVal || recordValue > maxVal)) {
+                return false;
+              }
+            } else {
+              // Multi-select filter: check if the record's value is included in the array
+              if (!filterValue.includes(recordValue)) {
+                return false;
+              }
             }
           } else {
             // Otherwise, perform a direct comparison
@@ -55,9 +64,9 @@ export interface Insights {
   genderSplit: Map<string, number>;
   platformDistribution: Map<string, number>;
   usageByAge: Map<number, number>;
-  mentalHealthByUsage: Array<{usage: number, mentalHealth: number}>;
-  sleepVsAddiction: Array<{sleep: number, addiction: number}>;
-  academicImpact: {yes: number, no: number};
+  mentalHealthByUsage: Array<{ usage: number, mentalHealth: number }>;
+  sleepVsAddiction: Array<{ sleep: number, addiction: number }>;
+  academicImpact: { yes: number, no: number };
   relationshipStats: Map<string, number>;
   ageDistribution: Map<number, number>;
   conflictDistribution: Map<number, number>;
