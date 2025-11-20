@@ -9,9 +9,11 @@ export interface BarChartData {
 interface BarChartProps {
   data: BarChartData[];
   orientation?: 'vertical' | 'horizontal';
+  xLabel?: string;
+  yLabel?: string;
 }
 
-const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical' }) => {
+const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLabel, yLabel }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -40,7 +42,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical' }) =
     };
   }, []);
 
-  const margin = { top: 20, right: 20, bottom: 60, left: 50 }; // Adjusted margins for responsiveness
+  const margin = { top: 20, right: 20, bottom: 60, left: 60 }; // Adjusted margins for labels
   const chartWidth = dimensions.width - margin.left - margin.right;
   const chartHeight = dimensions.height - margin.top - margin.bottom;
 
@@ -77,34 +79,63 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical' }) =
 
     const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
 
+    // Color scale for vibrant colors
+    const colorScale = d3.scaleSequential()
+      .domain([0, data.length - 1])
+      .interpolator(d3.interpolateRgb('#ec4899', '#f97316')); // Pink to Orange
+
     if (orientation === 'vertical') {
       g.append('g')
         .attr('transform', `translate(0,${chartHeight})`)
         .call(d3.axisBottom(xScale as d3.ScaleBand<string>))
         .selectAll("text")
         .attr("fill", "white")
-        .attr("font-size", 12);
+        .attr("font-size", 11);
       g.append('g')
         .call(d3.axisLeft(yScale as d3.ScaleLinear<number, number>))
         .selectAll("text")
         .attr("fill", "white")
-        .attr("font-size", 12);
+        .attr("font-size", 11);
     } else {
       g.append('g')
         .attr('transform', `translate(0,${chartHeight})`)
         .call(d3.axisBottom(xScale as d3.ScaleLinear<number, number>))
         .selectAll("text")
         .attr("fill", "white")
-        .attr("font-size", 12);
+        .attr("font-size", 11);
       g.append('g')
         .call(d3.axisLeft(yScale as d3.ScaleBand<string>))
         .selectAll("text")
         .attr("fill", "white")
-        .attr("font-size", 12);
+        .attr("font-size", 11);
     }
 
     g.selectAll(".domain, .tick line")
-      .attr("stroke", "white");
+      .attr("stroke", "rgba(255,255,255,0.3)");
+
+    // Axis Labels
+    if (xLabel) {
+      g.append('text')
+        .attr('x', chartWidth / 2)
+        .attr('y', chartHeight + 45)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', 12)
+        .attr('font-weight', '500')
+        .text(xLabel);
+    }
+
+    if (yLabel) {
+      g.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('x', -chartHeight / 2)
+        .attr('y', -45)
+        .attr('text-anchor', 'middle')
+        .attr('fill', 'white')
+        .attr('font-size', 12)
+        .attr('font-weight', '500')
+        .text(yLabel);
+    }
 
     g.selectAll('.bar')
       .data(data)
@@ -114,12 +145,14 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical' }) =
       .attr('y', d => orientation === 'vertical' ? (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>)(d.label)!)
       .attr('width', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : (xScale as d3.ScaleLinear<number, number>)(d.value))
       .attr('height', d => orientation === 'vertical' ? chartHeight - (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>).bandwidth())
-      .attr('fill', '#69b3a2');
+      .attr('fill', (_d, i) => colorScale(i))
+      .attr('stroke', '#1f2937')
+      .attr('stroke-width', 1);
 
-  }, [data, orientation, dimensions]);
+  }, [data, orientation, dimensions, xLabel, yLabel]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '400px' }}> {/* Set a default height or make it dynamic */}
+    <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
       <svg ref={svgRef} width="100%" height="100%"></svg>
     </div>
   );

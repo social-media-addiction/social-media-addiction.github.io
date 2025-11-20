@@ -66,9 +66,9 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
     const yAxisG = g.append('g').call(yAxis);
     yAxisG.selectAll("text")
       .attr("fill", "white")
-      .attr("font-size", 12);
+      .attr("font-size", 11);
     yAxisG.selectAll(".domain, .tick line")
-      .attr("stroke", "white");
+      .attr("stroke", "rgba(255,255,255,0.3)");
 
     const categories = data.map(d => d.key);
     const x = d3.scaleBand()
@@ -82,12 +82,15 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
       .call(xAxis);
       
     xAxisG.selectAll('text')
-      .style('text-anchor', 'middle')
+      .style('text-anchor', 'end')
+      .attr('dx', '-.8em')
+      .attr('dy', '.15em')
+      .attr('transform', 'rotate(-45)')
       .attr("fill", "white")
-      .attr("font-size", 12);
+      .attr("font-size", 11);
 
     xAxisG.selectAll(".domain, .tick line")
-        .attr("stroke", "white");
+        .attr("stroke", "rgba(255,255,255,0.3)");
 
     g.append("text")
         .attr("transform", "rotate(-90)")
@@ -100,25 +103,33 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
         .attr("font-size", 13)
         .attr("font-weight", "500");
 
-    data.forEach(d => {
+    // Color scale for vibrant colors
+    const colorScale = d3.scaleOrdinal()
+      .domain(categories)
+      .range(['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#f59e0b']);
+
+    data.forEach((d) => {
       const { key, values } = d;
       const { q1, median, q3, min, max } = values;
       const boxWidth = x.bandwidth();
+      const boxColor = colorScale(key) as string;
 
       g.append('line')
         .attr('x1', x(key)! + boxWidth / 2)
         .attr('x2', x(key)! + boxWidth / 2)
         .attr('y1', y(min))
         .attr('y2', y(max))
-        .attr('stroke', "white");
+        .attr('stroke', "rgba(255,255,255,0.5)")
+        .attr('stroke-width', 2);
 
       g.append('rect')
         .attr('x', x(key)!)
         .attr('y', y(q3))
         .attr('height', y(q1) - y(q3))
         .attr('width', boxWidth)
-        .attr('stroke', "white")
-        .style('fill', '#69b3a2');
+        .attr('stroke', "rgba(255,255,255,0.5)")
+        .attr('stroke-width', 2)
+        .style('fill', boxColor);
 
       g.selectAll(`median-line-${key}`)
         .data([median])
@@ -128,8 +139,8 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
         .attr('x2', x(key)! + boxWidth)
         .attr('y1', d => y(d))
         .attr('y2', d => y(d))
-        .attr('stroke', '#589a89')
-        .attr('stroke-width', 2);
+        .attr('stroke', '#1f2937')
+        .attr('stroke-width', 3);
     });
 
   }, [data, yMax, dimensions]); // Re-run effect when dimensions change
