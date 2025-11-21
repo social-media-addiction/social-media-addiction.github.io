@@ -11,12 +11,15 @@ import DonutChart, { DonutChartData } from '../components/DonutChart';
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
 import WorldMap from "../components/WorldMap";
 import FilterSidebar from "../components/FilterSideBar";
+import SpiderChart, { SpiderChartSeries } from "../components/SpiderChart";
+import { Clock, GraduationCap, Users, Heart, Zap, BookOpen, Globe, Angry, Brain, Bed, ArrowDownRight } from "lucide-react";
+import { FaInstagram } from "react-icons/fa";
 
 const AnalyzeData: React.FC = () => {
   const [originalData, setOriginalData] = useState<StudentRecord[]>([]);
   const [activeFilters, setActiveFilters] = useState<FilterCriteria>({});
   const [data, setData] = useState<StudentRecord[]>([]);
-  
+
   // New State for Tabs
   const [activeTab, setActiveTab] = useState<string>('Mental Health');
 
@@ -31,16 +34,36 @@ const AnalyzeData: React.FC = () => {
   }, [originalData, activeFilters]);
 
   // --- Platform Usage Tab Data ---
-  const platformPieData = useMemo((): PieChartData[] => {
+  // const platformPieData = useMemo((): PieChartData[] => {
+  //   if (data.length === 0) return [];
+  //   const counts = d3.rollup(data, v => v.length, d => d.Most_Used_Platform);
+  //   return Array.from(counts, ([label, value]) => ({ label, value }));
+  // }, [data]);
+
+  const platformSpiderData: SpiderChartSeries[] = useMemo(() => {
     if (data.length === 0) return [];
-    const counts = d3.rollup(data, v => v.length, d => d.Most_Used_Platform);
-    return Array.from(counts, ([label, value]) => ({ label, value }));
+
+    // 1. Calculate the most used platforms
+    const platformCounts = d3.rollup(data, v => v.length, d => d.Most_Used_Platform);
+    const totalCount = d3.sum(Array.from(platformCounts.values()));
+    const platformPercentages = Array.from(platformCounts, ([platform, count]) => ({
+      axis: platform,
+      value: (count / totalCount) * 100
+    }));
+    // Wrap axis/value pairs into the expected series shape
+    return [{ name: 'Platforms', data: platformPercentages }];
   }, [data]);
 
-  const usageByAgeData = useMemo((): LineChartData[] => {
+  const usageVSAgeData = useMemo((): LineChartData[] => {
     if (data.length === 0) return [];
-    const avgByAge = d3.rollup(data, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Age);
-    return Array.from(avgByAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+    const avgVSAge = d3.rollup(data, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Age);
+    return Array.from(avgVSAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [data]);
+
+  const platformByMentalHealthData = useMemo((): BarChartData[] => {
+    if (data.length === 0) return [];
+    const avgVSMentalHealth = d3.rollup(data, v => d3.mean(v, d => d.Mental_Health_Score)?.toFixed(2) || 0, d => d.Most_Used_Platform);
+    return Array.from(avgVSMentalHealth, ([label, value]) => ({ label, value: Number(value) }));
   }, [data]);
 
   const usageBoxPlotData = useMemo((): BoxPlotData[] => {
@@ -69,14 +92,38 @@ const AnalyzeData: React.FC = () => {
     ];
   }, [data]);
 
+  const academicImpactVSUsageData = useMemo((): LineChartData[] => {
+    if (data.length === 0) return [];
+    const avgVSUsage = d3.rollup(data, v => {
+      const affected = v.filter(d => d.Affects_Academic_Performance).length;
+      return (affected / v.length) * 100; // Percentage
+    }, d => Math.round(d.Avg_Daily_Usage_Hours));
+    return Array.from(avgVSUsage, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [data]);
+
   const academicLevelData = useMemo((): BarChartData[] => {
     if (data.length === 0) return [];
     const counts = d3.rollup(data, v => v.length, d => d.Academic_Level);
     return Array.from(counts, ([label, value]) => ({ label, value }));
   }, [data]);
 
+  const avgUsageVSStudentLevelData = useMemo((): BarChartData[] => {
+    if (data.length === 0) return [];
+    const avgVSLevel = d3.rollup(data, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours)?.toFixed(2) || 0, d => d.Academic_Level);
+    return Array.from(avgVSLevel, ([label, value]) => ({ label, value: Number(value) }));
+  }, [data]);
+
+  const academicImpactVSMentalHealthData = useMemo((): LineChartData[] => {
+    if (data.length === 0) return [];
+    const avgVSMentalHealth = d3.rollup(data, v => {
+      const affected = v.filter(d => d.Affects_Academic_Performance).length;
+      return (affected / v.length) * 100; // Percentage
+    }, d => Math.round(d.Mental_Health_Score));
+    return Array.from(avgVSMentalHealth, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [data]);
+
   // --- Mental Health Tab Data ---
-  const mentalHealthByUsageData = useMemo((): ScatterData[] => {
+  const mentalHealthVSUsageData = useMemo((): ScatterData[] => {
     if (data.length === 0) return [];
     return data.map(d => ({
       x: d.Avg_Daily_Usage_Hours,
@@ -84,7 +131,7 @@ const AnalyzeData: React.FC = () => {
     }));
   }, [data]);
 
-  const sleepByUsageData = useMemo((): ScatterData[] => {
+  const sleepVSUsageData = useMemo((): ScatterData[] => {
     if (data.length === 0) return [];
     return data.map(d => ({
       x: d.Avg_Daily_Usage_Hours,
@@ -92,16 +139,22 @@ const AnalyzeData: React.FC = () => {
     }));
   }, [data]);
 
-  const avgMentalHealthByAgeData = useMemo((): LineChartData[] => {
+  const avgMentalHealthVSAgeData = useMemo((): LineChartData[] => {
     if (data.length === 0) return [];
-    const avgByAge = d3.rollup(data, v => d3.mean(v, d => d.Mental_Health_Score) || 0, d => d.Age);
-    return Array.from(avgByAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+    const avgVSAge = d3.rollup(data, v => d3.mean(v, d => d.Mental_Health_Score) || 0, d => d.Age);
+    return Array.from(avgVSAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [data]);
 
-  const avgSleepByAgeData = useMemo((): LineChartData[] => {
+  const avgSleepVSAgeData = useMemo((): LineChartData[] => {
     if (data.length === 0) return [];
-    const avgByAge = d3.rollup(data, v => d3.mean(v, d => d.Sleep_Hours_Per_Night) || 0, d => d.Age);
-    return Array.from(avgByAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+    const avgVSAge = d3.rollup(data, v => d3.mean(v, d => d.Sleep_Hours_Per_Night) || 0, d => d.Age);
+    return Array.from(avgVSAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [data]);
+
+  const avgMentalHealthVSSleepData = useMemo((): LineChartData[] => {
+    if (data.length === 0) return [];
+    const avgVSSleep = d3.rollup(data, v => d3.mean(v, d => d.Mental_Health_Score) || 0, d => d.Sleep_Hours_Per_Night);
+    return Array.from(avgVSSleep, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [data]);
 
   // --- Relationships Tab Data ---
@@ -118,7 +171,7 @@ const AnalyzeData: React.FC = () => {
       .sort((a, b) => Number(a.label) - Number(b.label));
   }, [data]);
 
-  const conflictsByRelationshipData = useMemo((): BoxPlotData[] => {
+  const conflictsVSRelationshipData = useMemo((): BoxPlotData[] => {
     if (data.length === 0) return [];
     const groupedData = d3.group(data, d => d.Relationship_Status);
     return Array.from(groupedData, ([key, group]) => {
@@ -158,11 +211,10 @@ const AnalyzeData: React.FC = () => {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeTab === tab 
-                  ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30' 
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab
+                ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
             >
               {tab}
             </button>
@@ -180,163 +232,216 @@ const AnalyzeData: React.FC = () => {
 
           <div className="flex-1 flex flex-col overflow-hidden rounded-lg shadow-lg">
 
-          {/* --- CHARTS --- */}
+            {/* --- CHARTS --- */}
             <main className="flex-1 min-w-0 overflow-auto pr-1 scrollbar-thin scrollbar-thumb-gray-700">
-            
-            {activeTab === 'Geographic' && (
-              /* Geographic Tab - Only Map */
-              <div className="h-full">
-                <ChartContainer title="Geographic Distribution">
-                  <div className="h-[calc(100vh-14rem)] overflow-hidden">
-                    <WorldMap studentData={data} />
+
+              {activeTab === 'Geographic' && (
+                /* Geographic Tab - Only Map */
+                <div className="h-full">
+                  <ChartContainer title="Geographic Distribution" icon1={<Globe size={18} />}>
+                    <div className="h-[calc(100vh-14rem)] overflow-hidden">
+                      <WorldMap studentData={data} />
+                    </div>
+                  </ChartContainer>
+                </div>
+              )}
+
+              {activeTab === 'Platform Usage' && (
+                /* Platform Usage Tab */
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Most Used Platforms" icon1={<FaInstagram size={18} />}>
+                      <div className="h-[400px]">
+                        {/* <PieChart data={platformPieData} /> */}
+                        <SpiderChart data={platformSpiderData} config={{
+                          maxValue: 35,
+                          levels: 5,
+                          labelFactor: 1.2,
+                          opacityArea: 0.5,
+                          dotRadius: 6,
+                          strokeWidth: 2,
+                          roundStrokes: true,
+                          margin: { top: 70, right: 70, bottom: 70, left: 70 }
+                        }} />
+                      </div>
+                    </ChartContainer>
                   </div>
-                </ChartContainer>
-              </div>
-            )}
+                  a pensar o que meter aqui (que caiba)
 
-            {activeTab === 'Platform Usage' && (
-              /* Platform Usage Tab */
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                
-                <div className="h-[480px]">
-                  <ChartContainer title="Platform Distribution">
-                    <div className="h-[400px]">
-                      <PieChart data={platformPieData} />
-                    </div>
-                  </ChartContainer>
+
+                  <div className="h-[480px] xl:col-span-2">
+                    <ChartContainer title="Platform VS Mental Health" icon1={<FaInstagram size={18} />} icon2={<Brain size={18} />}>
+                      <div className="h-[400px]">
+                        <BarChart
+                          data={platformByMentalHealthData}
+                          xLabel="Platform"
+                          yLabel="Avg Mental Health Score"
+                        // colours={[
+                        //   "#E1306C", // Instagram
+                        //   "#1DA1F2", // Twitter
+                        //   "#000000", // TikTok
+                        //   "#FF0000", // YouTube
+                        //   "#1877F2", // Facebook
+                        //   "#0A66C2", // LinkedIn
+                        //   "#FFFC00", // Snapchat
+                        //   "#00C300", // LINE
+                        //   "#FFEB00", // KakaoTalk
+                        //   "#4A76A8", // VKontakte
+                        //   "#25D366", // WhatsApp
+                        //   "#07A119"  // WeChat
+                        // ]}                     
+                        />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px] xl:col-span-2">
+                    <ChartContainer title="Usage Distribution VS Platform" icon1={<Clock size={18} />} icon2={<FaInstagram size={18} />}>
+                      <div className="h-[400px]">
+                        <BoxPlot data={usageBoxPlotData} yMax={yMax} />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
                 </div>
+              )}
 
-                <div className="h-[480px]">
-                  <ChartContainer title="Usage by Platform">
-                    <div className="h-[400px]">
-                      <BoxPlot data={usageBoxPlotData} yMax={yMax} />
-                    </div>
-                  </ChartContainer>
+              {activeTab === 'Academic Performance' && (
+                /* Academic Performance Tab */
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Overall Academic Impact" icon1={<BookOpen size={18} />}>
+                      <div className="h-[400px]">
+                        <PieChart data={academicImpactData} />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Average Daily Usage VS Academic Level" icon1={<Clock size={18} />} icon2={<GraduationCap size={18} />}>
+                      <div className="h-[400px]">
+                        <BarChart data={avgUsageVSStudentLevelData} xLabel="Academic Level" yLabel="Number of Students" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Negative Academic Impact VS Daily Usage" icon1={<ArrowDownRight size={18} />} icon2={<Clock size={18} />}>
+                      <div className="h-[400px]">
+                        <LineChart
+                          data={academicImpactVSUsageData}
+                          xLabel="Avg Daily Usage (hours)"
+                          yLabel="% Negatively Affected"
+                          color="#10b981"
+                        />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Negative Academic Impact VS Mental Health Score" icon1={<ArrowDownRight size={18} />} icon2={<Brain size={18} />}>
+                      <div className="h-[400px]">
+                        <LineChart
+                          data={academicImpactVSMentalHealthData}
+                          xLabel="Mental Health Score"
+                          yLabel="% Negatively Affected"
+                          color="#f59e0b"
+                        />
+                      </div>
+                    </ChartContainer>
+                  </div>
                 </div>
+              )}
 
-                <div className="h-[480px] xl:col-span-2">
-                  <ChartContainer title="Average Daily Usage by Age">
-                    <div className="h-[400px]">
-                      <LineChart 
-                        data={usageByAgeData} 
-                        xLabel="Age" 
-                        yLabel="Avg Daily Usage (hours)"
-                        color="#3b82f6"
-                      />
-                    </div>
-                  </ChartContainer>
+              {activeTab === 'Mental Health' && (
+                /* Mental Health Tab */
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Mental Health VS Daily Usage" icon1={<Brain size={18} />} icon2={<Clock size={18} />}>
+                      <div className="h-[400px]">
+                        <ScatterGraph data={mentalHealthVSUsageData} xLabel="Social Media Daily Usage (hours)" yLabel="Mental Health Score" color="#8b5cf6" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Mental Health Score VS Age" icon1={<Brain size={18} />} icon2={<Users size={18} />}>
+                      <div className="h-[400px]">
+                        <LineChart
+                          data={avgMentalHealthVSAgeData}
+                          xLabel="Age"
+                          yLabel="Mental Health Score"
+                          color="#14b8a6"
+                        />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Sleep Hours VS Daily Usage" icon1={<Bed size={18} />} icon2={<Clock size={18} />}>
+                      <div className="h-[400px]">
+                        <ScatterGraph data={sleepVSUsageData} xLabel="Social Media Daily Usage (hours)" yLabel="Sleep Hours" color="#ec4899" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Mental Health VS Sleep Hours" icon1={<Brain size={18} />} icon2={<Bed size={18} />}>
+                      <div className="h-[400px]">
+                        <LineChart
+                          data={avgMentalHealthVSSleepData}
+                          xLabel="Sleep Hours"
+                          yLabel="Mental Health Score"
+                          color="#f59e0b"
+                        />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+
                 </div>
+              )}
 
-              </div>
-            )}
+              {activeTab === 'Relationships' && (
+                /* Relationships Tab */
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-            {activeTab === 'Academic Performance' && (
-              /* Academic Performance Tab */
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                
-                <div className="h-[480px]">
-                  <ChartContainer title="Academic Impact">
-                    <div className="h-[400px]">
-                      <PieChart data={academicImpactData} />
-                    </div>
-                  </ChartContainer>
+                  <div className="h-[480px]">
+                    <ChartContainer title="Relationship Status" icon1={<Heart size={18} />}>
+                      <div className="h-[400px]">
+                        <DonutChart data={relationshipStatusData} centerText={`${data.length}`} />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Social Media Conflicts" icon1={<Angry size={18} />}>
+                      <div className="h-[400px]">
+                        <BarChart data={conflictsData} xLabel="Conflict Level" yLabel="Number of Students" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px] xl:col-span-2">
+                    <ChartContainer title="Conflicts VS Relationship Status" icon1={<Angry size={18} />} icon2={<Heart size={18} />}>
+                      <div className="h-[400px]">
+                        <BoxPlot data={conflictsVSRelationshipData} yMax={conflictsYMax} />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
                 </div>
-
-                <div className="h-[480px]">
-                  <ChartContainer title="Students by Academic Level">
-                    <div className="h-[400px]">
-                      <BarChart data={academicLevelData} xLabel="Academic Level" yLabel="Number of Students" />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-              </div>
-            )}
-
-            {activeTab === 'Mental Health' && (
-              /* Mental Health Tab */
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                
-                <div className="h-[480px]">
-                  <ChartContainer title="Mental Health vs Usage">
-                    <div className="h-[400px]">
-                      <ScatterGraph data={mentalHealthByUsageData} xLabel="Daily Usage (hours)" yLabel="Mental Health Score" color="#8b5cf6" />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-                <div className="h-[480px]">
-                  <ChartContainer title="Sleep Hours vs Usage">
-                    <div className="h-[400px]">
-                      <ScatterGraph data={sleepByUsageData} xLabel="Daily Usage (hours)" yLabel="Sleep Hours" color="#ec4899" />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-                <div className="h-[480px]">
-                  <ChartContainer title="Mental Health Score by Age">
-                    <div className="h-[400px]">
-                      <LineChart 
-                        data={avgMentalHealthByAgeData} 
-                        xLabel="Age" 
-                        yLabel="Mental Health Score"
-                        color="#14b8a6"
-                      />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-                <div className="h-[480px]">
-                  <ChartContainer title="Sleep Hours by Age">
-                    <div className="h-[400px]">
-                      <LineChart 
-                        data={avgSleepByAgeData} 
-                        xLabel="Age" 
-                        yLabel="Sleep Hours"
-                        color="#f59e0b"
-                      />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-              </div>
-            )}
-
-            {activeTab === 'Relationships' && (
-              /* Relationships Tab */
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                
-                <div className="h-[480px]">
-                  <ChartContainer title="Relationship Status">
-                    <div className="h-[400px]">
-                      <DonutChart data={relationshipStatusData} centerText={`${data.length}`} />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-                <div className="h-[480px]">
-                  <ChartContainer title="Social Media Conflicts">
-                    <div className="h-[400px]">
-                      <BarChart data={conflictsData} xLabel="Conflict Level" yLabel="Number of Students" />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-                <div className="h-[480px] xl:col-span-2">
-                  <ChartContainer title="Conflicts by Relationship Status">
-                    <div className="h-[400px]">
-                      <BoxPlot data={conflictsByRelationshipData} yMax={conflictsYMax} />
-                    </div>
-                  </ChartContainer>
-                </div>
-
-              </div>
-            )}
+              )}
 
             </main>
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 };

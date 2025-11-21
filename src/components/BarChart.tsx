@@ -11,9 +11,10 @@ interface BarChartProps {
   orientation?: 'vertical' | 'horizontal';
   xLabel?: string;
   yLabel?: string;
+  colours?: string[];
 }
 
-const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLabel, yLabel }) => {
+const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLabel, yLabel, colours }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -157,6 +158,15 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
         .attr('x', -chartHeight / 2)
         .attr('y', -45)
         .text(yLabel);
+    }
+
+    if (colours && colours.length >= data.length) {
+      // Override color scale with provided colours by changing the interpolator
+      colorScale.domain([0, colours.length - 1]);
+      colorScale.interpolator((t: number) => {
+        const idx = Math.round(t * (colours.length - 1));
+        return colours[Math.max(0, Math.min(colours.length - 1, idx))];
+      });
     }
 
     // Bars with animations

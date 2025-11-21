@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as d3 from 'd3';
+// 1. Import the library
+import * as ss from 'simple-statistics';
 
 export interface ScatterData {
   x: number;
@@ -20,6 +22,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({ data, xLabel = 'X Axis', yL
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useLayoutEffect(() => {
+    // ... (unchanged dimension logic) ...
     const updateDimensions = () => {
       if (containerRef.current) {
         setDimensions({
@@ -48,8 +51,17 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({ data, xLabel = 'X Axis', yL
   const chartHeight = dimensions.height - margin.top - margin.bottom;
 
   useEffect(() => {
-    if (dimensions.width === 0 || dimensions.height === 0) return;
+    if (dimensions.width === 0 || dimensions.height === 0 || data.length < 2) return;
 
+    // --- 1. Prepare Data and Calculate Correlation ---
+    // Extract x and y arrays for simple-statistics
+    const xs = data.map(d => d.x);
+    const ys = data.map(d => d.y);
+    
+    // Calculate Pearson Correlation Coefficient
+    const correlationValue = ss.sampleCorrelation(xs, ys);
+    const rText = `r = ${correlationValue.toFixed(3)}`; // Format for display
+    
     const svg = d3.select(svgRef.current);
     
     // Only create the main group once
@@ -59,7 +71,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({ data, xLabel = 'X Axis', yL
         .attr('class', 'main-group')
         .attr('transform', `translate(${margin.left},${margin.top})`);
     }
-
+    // ... (X and Y scale definitions) ...
     const xMax = d3.max(data, d => d.x) || 0;
     const yMax = d3.max(data, d => d.y) || 0;
 
@@ -120,6 +132,20 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({ data, xLabel = 'X Axis', yL
       .attr('y', -45)
       .text(yLabel);
 
+    // --- 2. Display Correlation Value ---
+    const corrTextG = g.selectAll<SVGTextElement, unknown>('.correlation-text').data([null]);
+    corrTextG.enter().append('text')
+      .attr('class', 'correlation-text')
+      .attr('text-anchor', 'end')
+      .attr('fill', '#69b3a2')
+      .attr('font-size', 18)
+      .attr('font-weight', 'bold')
+      .merge(corrTextG)
+      .attr('x', chartWidth) // Position on the right side of the chart area
+      .attr('y', -5)        // Position near the top right of the chart area
+      .text(rText);
+
+    // ... (Dots and Tooltip logic - unchanged) ...
     // Dots with animations
     const dots = g.selectAll<SVGCircleElement, ScatterData>('.dot')
       .data(data, (_d, i) => i.toString());

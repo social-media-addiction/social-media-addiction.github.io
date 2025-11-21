@@ -11,14 +11,26 @@ interface LineChartProps {
   xLabel?: string;
   yLabel?: string;
   color?: string;
+  // --- New Optional Domain Parameters ---
+  xDomain?: [number, number] | string[]; // For numeric: [min, max], For categorical: ['cat1', 'cat2', ...]
+  yDomain?: [number, number];          // Always [min, max] for the y-axis (numeric)
 }
 
-const LineChart: React.FC<LineChartProps> = ({ data, xLabel = '', yLabel = '', color = '#69b3a2' }) => {
+const LineChart: React.FC<LineChartProps> = ({ 
+    data, 
+    xLabel = '', 
+    yLabel = '', 
+    color = '#69b3a2', 
+    // Destructure new props
+    xDomain, 
+    yDomain 
+}) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
   useLayoutEffect(() => {
+    // ... (unchanged dimension logic) ...
     const updateDimensions = () => {
       if (containerRef.current) {
         setDimensions({
@@ -57,21 +69,43 @@ const LineChart: React.FC<LineChartProps> = ({ data, xLabel = '', yLabel = '', c
     const isNumeric = typeof data[0].x === 'number';
 
     let xScale: any;
+
+    // --- X-Scale Domain Logic ---
     if (isNumeric) {
-      const xExtent = d3.extent(data, d => d.x as number) as [number, number];
+      // Numeric X-Axis (Linear Scale)
+      const defaultXExtent = d3.extent(data, d => d.x as number) as [number, number];
+      
+      const finalXDomain = xDomain && xDomain.length === 2 && typeof xDomain[0] === 'number'
+        ? (xDomain as [number, number]) // Use provided domain
+        : defaultXExtent;                 // Use calculated domain
+        
       xScale = d3.scaleLinear()
-        .domain(xExtent)
+        .domain(finalXDomain)
         .range([0, chartWidth]);
     } else {
+      // Categorical X-Axis (Point Scale)
+      const defaultXCategories = data.map(d => String(d.x));
+
+      const finalXDomain = xDomain && xDomain.every(d => typeof d === 'string')
+        ? (xDomain as string[]) // Use provided domain
+        : defaultXCategories;     // Use calculated domain
+
       xScale = d3.scalePoint()
-        .domain(data.map(d => String(d.x)))
+        .domain(finalXDomain)
         .range([0, chartWidth])
         .padding(0.5);
     }
-
-    const yMax = d3.max(data, d => d.y) || 0;
+    
+    // --- Y-Scale Domain Logic ---
+    const defaultYMax = d3.max(data, d => d.y) || 0;
+    
+    // Check if yDomain is provided and valid ([min, max])
+    const finalYDomain: [number, number] = yDomain && yDomain.length === 2
+      ? yDomain                                   // Use provided domain
+      : [0, defaultYMax * 1.1];                   // Use calculated domain (starting from 0)
+      
     const yScale = d3.scaleLinear()
-      .domain([0, yMax * 1.1])
+      .domain(finalYDomain)
       .range([chartHeight, 0]);
 
     // X Axis
@@ -213,7 +247,7 @@ const LineChart: React.FC<LineChartProps> = ({ data, xLabel = '', yLabel = '', c
       .attr('y', -45)
       .text(yLabel);
 
-  }, [data, dimensions, color, xLabel, yLabel]);
+  }, [data, dimensions, color, xLabel, yLabel, xDomain, yDomain]); // DEPENDENCY ARRAY UPDATED
 
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%' }}>
