@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as d3 from 'd3';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -199,9 +200,9 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
       .attr('class', 'bar')
       .attr('x', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>)(d.label)! : xScale(0))
       .attr('y', d => orientation === 'vertical' ? chartHeight : (yScale as d3.ScaleBand<string>)(d.label)!)
-      .attr('width', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : 0)
+      .attr('width', _d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : 0)
       .attr('height', 0)
-      .attr('fill', (_d, i) => colorScale(i))
+      .style('fill', (_d, i) => colorScale(i))
       .attr('stroke', '#1f2937')
       .attr('stroke-width', 1)
       .attr('opacity', 0)

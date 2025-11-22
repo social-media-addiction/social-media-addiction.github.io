@@ -1,7 +1,15 @@
-import React, { useEffect, useState } from "react";
-import * as d3 from "d3";
+import React, { useEffect, useState, useMemo } from "react";
+
 import { loadStudentData, generateInsights, StudentRecord, Insights } from "../data/data";
-import Aurora from "../components/Aurora"; // <-- 1. Import Aurora
+import Aurora from "../components/Aurora";
+import ChartContainer from "../components/ChartContainer";
+import BarChart, { BarChartData } from "../components/BarChart";
+import PieChart, { PieChartData } from "../components/PieChart";
+import LineChart, { LineChartData } from "../components/LineChart";
+import ScatterGraph, { ScatterData } from "../components/ScatterGraph";
+import { Brain, Clock, BookOpen, Bed, Zap, Activity, TrendingUp } from "lucide-react";
+import { FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
+import { SiLine, SiKakaotalk } from "react-icons/si";
 
 const InterestingFinds: React.FC = () => {
   const [data, setData] = useState<StudentRecord[]>([]);
@@ -14,389 +22,184 @@ const InterestingFinds: React.FC = () => {
     });
   }, []);
 
+  // --- Data Preparation for Reusable Components ---
+
+  const platformIcons: Record<string, React.ReactNode> = {
+    "Instagram": <FaInstagram size={20} color="#E1306C" />,
+    "Twitter": <FaTwitter size={20} color="#1DA1F2" />,
+    "TikTok": <FaTiktok size={20} color="#000000" />,
+    "YouTube": <FaYoutube size={20} color="#FF0000" />,
+    "Facebook": <FaFacebook size={20} color="#1877F2" />,
+    "LinkedIn": <FaLinkedin size={20} color="#0A66C2" />,
+    "Snapchat": <FaSnapchat size={20} color="#FFFC00" />,
+    "LINE": <SiLine size={20} color="#00C300" />,
+    "KakaoTalk": <SiKakaotalk size={20} color="#FFEB00" />,
+    "VKontakte": <FaVk size={20} color="#4A76A8" />,
+    "WhatsApp": <FaWhatsapp size={20} color="#25D366" />,
+    "WeChat": <FaWeixin size={20} color="#07A119" />
+  };
+
+
+  const platformChartData = useMemo((): BarChartData[] => {
+    if (!insights) return [];
+    return Array.from(insights.platformDistribution.entries())
+      .sort((a, b) => b[1] - a[1])
+      .map(([label, value]) => ({ label, value }));
+  }, [insights]);
+
+  const ageUsageChartData = useMemo((): LineChartData[] => {
+    if (!insights) return [];
+    return Array.from(insights.usageByAge.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([age, usage]) => ({ x: age, y: usage }));
+  }, [insights]);
+
+  const mentalHealthUsageData = useMemo((): ScatterData[] => {
+    if (!insights) return [];
+    return insights.mentalHealthByUsage.map(d => ({ x: d.usage, y: d.mentalHealth }));
+  }, [insights]);
+
+  const academicPieData = useMemo((): PieChartData[] => {
+    if (!insights) return [];
+    return [
+      { label: 'Affected', value: insights.academicImpact.yes },
+      { label: 'Not Affected', value: insights.academicImpact.no }
+    ];
+  }, [insights]);
+
+  const sleepAddictionData = useMemo((): ScatterData[] => {
+    if (!insights) return [];
+    return insights.sleepVsAddiction.map(d => ({ x: d.sleep, y: d.addiction }));
+  }, [insights]);
+
+
+
+
+
   if (!data.length || !insights) {
     return (
-      <div className="relative min-h-screen pt-20 text-white bg-gradient-to-b from-[#1a0d26] via-[#2a1a3a] to-[#1a0d26]">
-        <p className="p-6 text-gray-300">Loading insights...</p>
+      <div className="relative min-h-screen pt-20 text-white bg-gradient-to-b from-[#1a0d26] via-[#2a1a3a] to-[#1a0d26] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-t-[#69b3a2] border-white/10 rounded-full animate-spin"></div>
+          <p className="text-gray-300 font-medium">Loading insights...</p>
+        </div>
       </div>
     );
   }
 
-  const width = 500;
-  const height = 350;
-  const margin = { top: 40, right: 30, bottom: 50, left: 60 };
-  const lightGray = "#9ca3af"; // text-gray-400
-  const axisLineColor = "#4b5563"; // text-gray-600
-  const lightText = "#e5e7eb"; // text-gray-200
-
-  const renderAxis = (xScale: any, yScale: any, xLabel: string, yLabel: string, xType: 'band' | 'linear' = 'linear') => {
-    const xAxis = xType === 'band'
-      ? d3.axisBottom(xScale)
-      : d3.axisBottom(xScale).ticks(5);
-
-    const yAxis = d3.axisLeft(yScale).ticks(5);
-
-    return (
-      <>
-        {/* X Axis */}
-        <g
-          transform={`translate(0, ${height - margin.bottom})`}
-          ref={node => {
-            if (node) {
-              d3.select(node)
-                .call(xAxis as any)
-                .selectAll("text")
-                .attr("fill", lightGray) // Style axis text
-                .attr("font-size", 12);
-              d3.select(node)
-                .selectAll("line, path")
-                .attr("stroke", axisLineColor); // Style axis lines
-            }
-          }}
-        />
-        {/* Y Axis */}
-        <g
-          transform={`translate(${margin.left}, 0)`}
-          ref={node => {
-            if (node) {
-              d3.select(node)
-                .call(yAxis as any)
-                .selectAll("text")
-                .attr("fill", lightGray) // Style axis text
-                .attr("font-size", 12);
-              d3.select(node)
-                .selectAll("line, path")
-                .attr("stroke", axisLineColor); // Style axis lines
-            }
-          }}
-        />
-        {/* Labels */}
-        <text x={width / 2} y={height - 10} textAnchor="middle" fontSize={13} fill={lightGray} fontWeight="500">
-          {xLabel}
-        </text>
-        <text transform={`rotate(-90) translate(-${height / 2}, 15)`} textAnchor="middle" fontSize={13} fill={lightGray} fontWeight="500">
-          {yLabel}
-        </text>
-      </>
-    );
-  };
-
-  // --- Chart data preparation (no changes needed) ---
-  const genderData = Array.from(insights.genderSplit.entries());
-  const genderXScale = d3.scaleBand().domain(genderData.map(d => d[0])).range([margin.left, width - margin.right]).padding(0.3);
-  const genderYScale = d3.scaleLinear().domain([0, d3.max(genderData.map(d => d[1])) ?? 0]).nice().range([height - margin.bottom, margin.top]);
-
-  const platformData = Array.from(insights.platformDistribution.entries()).sort((a, b) => b[1] - a[1]);
-  const platformXScale = d3.scaleBand().domain(platformData.map(d => d[0])).range([margin.left, width - margin.right]).padding(0.3);
-  const platformYScale = d3.scaleLinear().domain([0, d3.max(platformData.map(d => d[1])) ?? 0]).nice().range([height - margin.bottom, margin.top]);
-
-  const ageData = Array.from(insights.usageByAge.entries()).sort((a, b) => a[0] - b[0]);
-  const ageXScale = d3.scaleLinear().domain(d3.extent(ageData.map(d => d[0])) as [number, number]).range([margin.left, width - margin.right]);
-  const ageYScale = d3.scaleLinear().domain([0, d3.max(ageData.map(d => d[1])) ?? 0]).nice().range([height - margin.bottom, margin.top]);
-  const ageLine = d3.line<[number, number]>().x(d => ageXScale(d[0])).y(d => ageYScale(d[1]));
-
-  const mentalHealthXScale = d3.scaleLinear().domain(d3.extent(insights.mentalHealthByUsage.map(d => d.usage)) as [number, number]).range([margin.left, width - margin.right]);
-  const mentalHealthYScale = d3.scaleLinear().domain(d3.extent(insights.mentalHealthByUsage.map(d => d.mentalHealth)) as [number, number]).range([height - margin.bottom, margin.top]);
-
-  const academicPie = d3.pie<{ key: string, value: number }>().value(d => d.value);
-  const academicData = [
-    { key: 'Yes', value: insights.academicImpact.yes },
-    { key: 'No', value: insights.academicImpact.no }
-  ];
-  const academicArc: any = d3.arc().innerRadius(0).outerRadius(Math.min(width, height) / 3);
-
-  const sleepXScale = d3.scaleLinear().domain(d3.extent(insights.sleepVsAddiction.map(d => d.sleep)) as [number, number]).range([margin.left, width - margin.right]);
-  const sleepYScale = d3.scaleLinear().domain(d3.extent(insights.sleepVsAddiction.map(d => d.addiction)) as [number, number]).range([height - margin.bottom, margin.top]);
-
-  const relationshipData = Array.from(insights.relationshipStats.entries());
-  const relationshipXScale = d3.scaleBand().domain(relationshipData.map(d => d[0])).range([margin.left, width - margin.right]).padding(0.3);
-  const relationshipYScale = d3.scaleLinear().domain([0, d3.max(relationshipData.map(d => d[1])) ?? 0]).nice().range([height - margin.bottom, margin.top]);
-
-  const ageDistData = Array.from(insights.ageDistribution.entries()).sort((a, b) => a[0] - b[0]);
-  const ageDistXScale = d3.scaleBand().domain(ageDistData.map(d => d[0].toString())).range([margin.left, width - margin.right]).padding(0.3);
-  const ageDistYScale = d3.scaleLinear().domain([0, d3.max(ageDistData.map(d => d[1])) ?? 0]).nice().range([height - margin.bottom, margin.top]);
-
-  // --- Card Style ---
-  const cardStyle = "bg-gray-900 border border-gray-700 shadow-lg rounded-lg p-6";
-
   return (
-    // --- 2. Add Main BG and Aurora ---
-    <div className="relative min-h-screen pt-20 text-white bg-gradient-to-b from-[#1a0d26] via-[#2a1a3a] to-[#1a0d26] overflow-x-hidden">
+    <div className="relative min-h-screen pt-24 text-white bg-gradient-to-b from-[#1a0d26] via-[#2a1a3a] to-[#1a0d26] overflow-x-hidden">
       <div className="absolute inset-0 z-0 pointer-events-none">
         <Aurora blend={0.5} amplitude={1.2} speed={0.5} />
       </div>
 
-      {/* --- 3. Add z-10 Content Wrapper --- */}
-      <div className="relative z-10 p-6 max-w-7xl mx-auto font-sans">
+      <div className="relative z-10 container mx-auto px-4 pb-12">
+        
+        {/* Header */}
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-          {/* --- 4. Restyle Cards --- */}
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <div className="text-sm text-gray-300">Avg Daily Usage</div>
-            <div className="text-2xl font-bold text-white">{insights.avgUsage.toFixed(2)}h</div>
-          </div>
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <div className="text-sm text-gray-300">Avg Sleep</div>
-            <div className="text-2xl font-bold text-white">{insights.avgSleep.toFixed(1)}h</div>
-          </div>
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <div className="text-sm text-gray-300">Mental Health</div>
-            <div className="text-2xl font-bold text-white">{insights.avgMentalHealth.toFixed(1)}</div>
-          </div>
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <div className="text-sm text-gray-300">Top Platform</div>
-            <div className="text-2xl font-bold text-white">{insights.topPlatform}</div>
-          </div>
-          <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg">
-            <div className="text-sm text-gray-300">Addiction/Sleep</div>
-            <div className="text-2xl font-bold text-white">{insights.addictionVsSleep.toFixed(2)}</div>
-          </div>
+        {/* Key Metrics Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
+          <MetricCard 
+            title="Avg Daily Usage" 
+            value={`${insights.avgUsage.toFixed(2)}h`} 
+            icon={<Clock className="text-teal-400" size={20} />}
+          />
+          <MetricCard 
+            title="Avg Sleep" 
+            value={`${insights.avgSleep.toFixed(1)}h`} 
+            icon={<Bed className="text-indigo-400" size={20} />}
+          />
+          <MetricCard 
+            title="Mental Health" 
+            value={`${insights.avgMentalHealth.toFixed(1)}`} 
+            icon={<Brain className="text-pink-400" size={20} />}
+          />
+          <MetricCard 
+            title="Top Platform" 
+            value={insights.topPlatform} 
+            icon={<Zap className="text-yellow-400" size={20} />}
+          />
+          <MetricCard 
+            title="Addiction/Sleep" 
+            value={insights.addictionVsSleep.toFixed(2)} 
+            icon={<Activity className="text-red-400" size={20} />}
+          />
         </div>
 
         {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-1 gap-8">
-          {/* Gender Distribution */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Gender Distribution</h3>
-            <svg width={width} height={height} className="mx-auto">
-              {genderData.map(([gender, count]) => (
-                <g key={gender}>
-                  <rect
-                    x={genderXScale(gender)!}
-                    y={genderYScale(count)}
-                    width={genderXScale.bandwidth()}
-                    height={genderYScale(0) - genderYScale(count)}
-                    fill="#3b82f6"
-                    className="opacity-80 hover:opacity-100 transition-opacity"
-                  />
-                  <text
-                    x={genderXScale(gender)! + genderXScale.bandwidth() / 2}
-                    y={genderYScale(count) - 8}
-                    textAnchor="middle"
-                    fontSize={13}
-                    fill={lightText} // <-- Style text
-                    fontWeight="bold"
-                  >
-                    {count}
-                  </text>
-                </g>
-              ))}
-              {renderAxis(genderXScale, genderYScale, "Gender", "Count", "band")}
-            </svg>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
+          
+          {/* Row 1 */}
 
-          {/* Platform Distribution */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Platform Popularity</h3>
-            <svg width={width} height={height} className="mx-auto">
-              {platformData.map(([platform, count]) => (
-                <g key={platform}>
-                  <rect
-                    x={platformXScale(platform)!}
-                    y={platformYScale(count)}
-                    width={platformXScale.bandwidth()}
-                    height={platformYScale(0) - platformYScale(count)}
-                    fill="#10b981"
-                    className="opacity-80 hover:opacity-100 transition-opacity"
-                  />
-                  <text
-                    x={platformXScale(platform)! + platformXScale.bandwidth() / 2}
-                    y={platformYScale(count) - 8}
-                    textAnchor="middle"
-                    fontSize={12}
-                    fill={lightText} // <-- Style text
-                    fontWeight="bold"
-                  >
-                    {count}
-                  </text>
-                </g>
-              ))}
-              {renderAxis(platformXScale, platformYScale, "Platform", "Users", "band")}
-            </svg>
-          </div>
 
-          {/* Usage by Age */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Usage by Age</h3>
-            <svg width={width} height={height} className="mx-auto">
-              <path
-                d={ageLine(ageData) || ""}
-                fill="none"
-                stroke="#8b5cf6"
-                strokeWidth={3}
+          <ChartContainer title="Platform Popularity" icon1={<Zap size={18} />}>
+            <div className="h-[300px]">
+              <BarChart 
+                data={platformChartData} 
+                orientation="horizontal"
+                xLabel="Users" 
+                yLabel="Platform" 
+                iconMap={platformIcons}
               />
-              {ageData.map(([age, usage]) => (
-                <circle
-                  key={age}
-                  cx={ageXScale(age)}
-                  cy={ageYScale(usage)}
-                  r={6}
-                  fill="#8b5cf6"
-                  stroke="#3b254f" // <-- Use card bg for punch-out effect
-                  strokeWidth={2}
-                />
-              ))}
-              {renderAxis(ageXScale, ageYScale, "Age", "Avg Usage (hours)")}
-              <text x={width - margin.right} y={margin.top} textAnchor="end" fontSize={13} fill={lightGray} fontWeight="bold">
-                Trend Line
-              </text>
-            </svg>
+            </div>
+          </ChartContainer>
+
+          <ChartContainer title="Usage by Age Trend" icon1={<TrendingUp size={18} />}>
+            <div className="h-[300px]">
+              <LineChart data={ageUsageChartData} xLabel="Age" yLabel="Avg Usage (hours)" color="#8b5cf6" />
+            </div>
+          </ChartContainer>
+
+          {/* Row 2 */}
+          <ChartContainer title="Academic Impact" icon1={<BookOpen size={18} />}>
+            <div className="h-[300px]">
+              <PieChart data={academicPieData} />
+            </div>
+          </ChartContainer>
+
+          {/* Row 2 */}
+          <div className="lg:col-span-2">
+            <ChartContainer title="Mental Health vs Daily Usage" icon1={<Brain size={18} />} icon2={<Clock size={18} />}>
+              <div className="h-[350px]">
+                <ScatterGraph data={mentalHealthUsageData} xLabel="Daily Usage (hours)" yLabel="Mental Health Score" color="#ef4444" />
+              </div>
+            </ChartContainer>
           </div>
 
-          {/* Mental Health vs Usage */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Mental Health vs Usage</h3>
-            <svg width={width} height={height} className="mx-auto">
-              {insights.mentalHealthByUsage.map((d, i) => (
-                <circle
-                  key={i}
-                  cx={mentalHealthXScale(d.usage)}
-                  cy={mentalHealthYScale(d.mentalHealth)}
-                  r={5}
-                  fill="#ef4444"
-                  opacity={0.7}
-                  className="hover:r-7 transition-all"
-                />
-              ))}
-              {renderAxis(mentalHealthXScale, mentalHealthYScale, "Daily Usage (hours)", "Mental Health Score")}
-              <text x={width - margin.right} y={margin.top} textAnchor="end" fontSize={13} fill={lightGray}>
-                Each dot = 1 student
-              </text>
-            </svg>
-          </div>
+          {/* Row 3 */}
+          <ChartContainer title="Sleep vs Addiction" icon1={<Bed size={18} />} icon2={<Activity size={18} />}>
+            <div className="h-[300px]">
+              <ScatterGraph data={sleepAddictionData} xLabel="Sleep (hours)" yLabel="Addiction Score" color="#6366f1" />
+            </div>
+          </ChartContainer>
 
-          {/* Academic Impact */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Academic Impact</h3>
-            <svg width={width} height={height} className="mx-auto">
-              <g transform={`translate(${width / 2}, ${height / 2})`}>
-                {academicPie(academicData).map((slice, i) => (
-                  <g key={i}>
-                    <path
-                      d={academicArc(slice)}
-                      fill={i === 0 ? "#f59e0b" : "#6b7280"} // Orange for "Yes", Gray for "No"
-                    />
-                    <text
-                      transform={`translate(${academicArc.centroid(slice)})`}
-                      textAnchor="middle"
-                      fontSize={13}
-                      fill="white"
-                      fontWeight="bold"
-                    >
-                      {academicData[i].value}
-                    </text>
-                  </g>
-                ))}
-              </g>
-              <text x={width / 2} y={height - 20} textAnchor="middle" fontSize={14} fill={lightText} fontWeight="500">
-                Total: {data.length} students
-              </text>
-            </svg>
-          </div>
 
-          {/* Sleep vs Addiction */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Sleep vs Addiction</h3>
-            <svg width={width} height={height} className="mx-auto">
-              {insights.sleepVsAddiction.map((d, i) => (
-                <circle
-                  key={i}
-                  cx={sleepXScale(d.sleep)}
-                  cy={sleepYScale(d.addiction)}
-                  r={5}
-                  fill="#6366f1"
-                  opacity={0.7}
-                  className="hover:r-7 transition-all"
-                />
-              ))}
-              {renderAxis(sleepXScale, sleepYScale, "Sleep Hours/Night", "Addiction Score")}
-              <text x={width - margin.right} y={margin.top} textAnchor="end" fontSize={13} fill={lightGray} fontWeight="500">
-                Correlation Analysis
-              </text>
-            </svg>
-          </div>
 
-          {/* Relationship Status */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Relationship Status</h3>
-            <svg width={width} height={height} className="mx-auto">
-              {relationshipData.map(([status, count]) => (
-                <g key={status}>
-                  <rect
-                    x={relationshipXScale(status)!}
-                    y={relationshipYScale(count)}
-                    width={relationshipXScale.bandwidth()}
-                    height={relationshipYScale(0) - relationshipYScale(count)}
-                    fill="#ec4899"
-                    className="opacity-80 hover:opacity-100 transition-opacity"
-                  />
-                  <text
-                    x={relationshipXScale(status)! + relationshipXScale.bandwidth() / 2}
-                    y={relationshipYScale(count) - 8}
-                    textAnchor="middle"
-                    fontSize={12}
-                    fill={lightText} // <-- Style text
-                    fontWeight="bold"
-                  >
-                    {count}
-                  </text>
-                </g>
-              ))}
-              {renderAxis(relationshipXScale, relationshipYScale, "Relationship Status", "Count", "band")}
-            </svg>
-          </div>
 
-          {/* Age Distribution */}
-          <div className={cardStyle}>
-            <h3 className="text-xl font-semibold mb-4 text-sky-300">Age Distribution</h3>
-            <svg width={width} height={height} className="mx-auto">
-              {ageDistData.map(([age, count]) => (
-                <g key={age}>
-                  <rect
-                    x={ageDistXScale(age.toString())!}
-                    y={ageDistYScale(count)}
-                    width={ageDistXScale.bandwidth()}
-                    height={ageDistYScale(0) - ageDistYScale(count)}
-                    fill="#06b6d4"
-                    className="opacity-80 hover:opacity-100 transition-opacity"
-                  />
-                  <text
-                    x={ageDistXScale(age.toString())! + ageDistXScale.bandwidth() / 2}
-                    y={ageDistYScale(count) - 8}
-                    textAnchor="middle"
-                    fontSize={12}
-                    fill={lightText} // <-- Style text
-                    fontWeight="bold"
-                  >
-                    {count}
-                  </text>
-                </g>
-              ))}
-              {renderAxis(ageDistXScale, ageDistYScale, "Age", "Count", "band")}
-            </svg>
-          </div>
 
         </div>
 
-        {/* Additional Insights */}
-        <div className={`mt-8 ${cardStyle}`}>
-          <h2 className="text-2xl font-semibold mb-4 text-sky-300">Key Insights</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-200">
-            <div>
-              <h4 className="font-semibold mb-3 text-lg text-sky-200">Usage Patterns</h4>
-              <ul className="space-y-2">
-                <li className="flex items-start"><span className="text-blue-400 mr-2">•</span>Average daily social media usage: <b className="ml-1 text-white">{insights.avgUsage.toFixed(2)} hours</b></li>
-                <li className="flex items-start"><span className="text-green-400 mr-2">•</span>Most popular platform: <b className="ml-1 text-white">{insights.topPlatform}</b></li>
-                <li className="flex items-start"><span className="text-purple-400 mr-2">•</span>Peak usage age: <b className="ml-1 text-white">{Array.from(insights.usageByAge.entries()).sort((a, b) => b[1] - a[1])[0]?.[0]} years old</b></li>
+        {/* Key Insights Section */}
+        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-8 shadow-xl">
+          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Zap className="text-yellow-400" />
+            Key Takeaways
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-teal-200 border-b border-white/10 pb-2">Usage Patterns</h3>
+              <ul className="space-y-3">
+                <InsightItem label="Avg Daily Usage" value={`${insights.avgUsage.toFixed(2)} hours`} color="bg-blue-500" />
+                <InsightItem label="Top Platform" value={insights.topPlatform} color="bg-green-500" />
+                <InsightItem label="Peak Usage Age" value={`${Array.from(insights.usageByAge.entries()).sort((a, b) => b[1] - a[1])[0]?.[0]} years old`} color="bg-purple-500" />
               </ul>
             </div>
-            <div>
-              <h4 className="font-semibold mb-3 text-lg text-sky-200">Health & Well-being</h4>
-              <ul className="space-y-2">
-                <li className="flex items-start"><span className="text-orange-400 mr-2">•</span>{((insights.academicImpact.yes / data.length) * 100).toFixed(1)}% report academic impact</li>
-                <li className="flex items-start"><span className="text-red-400 mr-2">•</span>Average mental health score: <b className="ml-1 text-white">{insights.avgMentalHealth.toFixed(1)}/10</b></li>
-                <li className="flex items-start"><span className="text-indigo-400 mr-2">•</span>Average sleep duration: <b className="ml-1 text-white">{insights.avgSleep.toFixed(1)} hours/night</b></li>
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-pink-200 border-b border-white/10 pb-2">Health & Well-being</h3>
+              <ul className="space-y-3">
+                <InsightItem label="Academic Impact" value={`${((insights.academicImpact.yes / data.length) * 100).toFixed(1)}% affected`} color="bg-orange-500" />
+                <InsightItem label="Avg Mental Health" value={`${insights.avgMentalHealth.toFixed(1)}/5`} color="bg-red-500" />
+                <InsightItem label="Avg Sleep" value={`${insights.avgSleep.toFixed(1)} hours`} color="bg-indigo-500" />
               </ul>
             </div>
           </div>
@@ -406,5 +209,33 @@ const InterestingFinds: React.FC = () => {
     </div>
   );
 };
+
+// Helper Components for cleaner code
+const MetricCard = ({ title, value, icon, trend, trendUp }: { title: string, value: string, icon: React.ReactNode, trend?: string, trendUp?: boolean }) => (
+  <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-5 rounded-xl hover:bg-white/10 transition-all duration-300 group">
+    <div className="flex justify-between items-start mb-2">
+      <span className="text-gray-400 text-sm font-medium">{title}</span>
+      <div className="p-2 bg-white/5 rounded-lg group-hover:scale-110 transition-transform duration-300">
+        {icon}
+      </div>
+    </div>
+    <div className="text-2xl font-bold text-white mb-1">{value}</div>
+    {trend && (
+      <div className={`text-xs flex items-center gap-1 ${trendUp ? 'text-emerald-400' : 'text-rose-400'}`}>
+        {trendUp ? '↑' : '↓'} {trend}
+      </div>
+    )}
+  </div>
+);
+
+const InsightItem = ({ label, value, color }: { label: string, value: string, color: string }) => (
+  <li className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+    <div className="flex items-center gap-3">
+      <span className={`w-2 h-2 rounded-full ${color}`}></span>
+      <span className="text-gray-300">{label}</span>
+    </div>
+    <span className="font-bold text-white">{value}</span>
+  </li>
+);
 
 export default InterestingFinds;

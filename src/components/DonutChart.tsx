@@ -150,7 +150,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, centerText }) => {
       .data(data)
       .enter().append('g')
       .attr('class', 'legend-item')
-      .attr('transform', (d, i) => `translate(0, ${i * 25})`);
+      .attr('transform', (_d, i) => `translate(0, ${i * 25})`);
 
     legendItems.append('rect')
       .attr('width', 18)

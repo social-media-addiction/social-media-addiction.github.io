@@ -236,7 +236,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
       .attr('r', dotRadius)
       .attr('cx', (_d, i) => rScale(_d.value) * Math.cos(angle(i)))
       .attr('cy', (_d, i) => rScale(_d.value) * Math.sin(angle(i)))
-      .style('fill', (d, i, nodes) => {
+      .style('fill', (_d, i, nodes) => {
         const parentIndex = (nodes[i] as SVGElement).parentNode ? d3.select((nodes[i] as SVGElement).parentNode as HTMLElement).datum() as SpiderChartSeries : undefined;
         return parentIndex?.color || colorScale(parentIndex?.name || i.toString());
       })

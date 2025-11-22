@@ -9,10 +9,10 @@ import LineChart, { LineChartData } from '../components/LineChart';
 import PieChart, { PieChartData } from '../components/PieChart';
 import DonutChart, { DonutChartData } from '../components/DonutChart';
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
-import WorldMap from "../components/WorldMap";
+
 import FilterSidebar from "../components/FilterSideBar";
-import SpiderChart, { SpiderChartSeries } from "../components/SpiderChart";
-import { Clock, GraduationCap, Users, Heart, Zap, BookOpen, Globe, Angry, Brain, Bed, ArrowDownRight } from "lucide-react";
+
+import { Clock, GraduationCap, Users, Heart, BookOpen, Angry, Brain, Bed, ArrowDownRight } from "lucide-react";
 import { FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
 
@@ -22,7 +22,7 @@ const AnalyzeData: React.FC = () => {
   const [data, setData] = useState<StudentRecord[]>([]);
 
   // New State for Tabs
-  const [activeTab, setActiveTab] = useState<string>('Mental Health');
+  const [activeTab, setActiveTab] = useState<string>('Demographics');
 
   useEffect(() => {
     loadStudentData("/data/dataset.csv").then((parsed: StudentRecord[]) => {
@@ -48,11 +48,7 @@ const AnalyzeData: React.FC = () => {
       .sort((a, b) => b.value - a.value);
   }, [data]);
 
-  const usageVSAgeData = useMemo((): LineChartData[] => {
-    if (data.length === 0) return [];
-    const avgVSAge = d3.rollup(data, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Age);
-    return Array.from(avgVSAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
-  }, [data]);
+
 
   const platformByMentalHealthData = useMemo((): BarChartData[] => {
     if (data.length === 0) return [];
@@ -139,11 +135,7 @@ const AnalyzeData: React.FC = () => {
     return Array.from(avgVSAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [data]);
 
-  const avgSleepVSAgeData = useMemo((): LineChartData[] => {
-    if (data.length === 0) return [];
-    const avgVSAge = d3.rollup(data, v => d3.mean(v, d => d.Sleep_Hours_Per_Night) || 0, d => d.Age);
-    return Array.from(avgVSAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
-  }, [data]);
+
 
   const avgMentalHealthVSSleepData = useMemo((): LineChartData[] => {
     if (data.length === 0) return [];
@@ -180,15 +172,29 @@ const AnalyzeData: React.FC = () => {
     });
   }, [data]);
 
+  // --- Demographics Tab Data ---
+  const genderData = useMemo((): BarChartData[] => {
+    if (data.length === 0) return [];
+    const counts = d3.rollup(data, v => v.length, d => d.Gender);
+    return Array.from(counts, ([label, value]) => ({ label, value }));
+  }, [data]);
+
+  const ageDistributionData = useMemo((): BarChartData[] => {
+    if (data.length === 0) return [];
+    const counts = d3.rollup(data, v => v.length, d => d.Age);
+    return Array.from(counts, ([label, value]) => ({ label: String(label), value }))
+      .sort((a, b) => Number(a.label) - Number(b.label));
+  }, [data]);
+
   const yMax = useMemo(() => d3.max(data, d => d.Avg_Daily_Usage_Hours) || 0, [data]);
   const conflictsYMax = useMemo(() => d3.max(data, d => d.Conflicts_Over_Social_Media) || 0, [data]);
 
   const tabs = [
+    'Demographics',
     'Mental Health',
     'Academic Performance',
     'Platform Usage',
     'Relationships',
-    'Geographic',
   ];
 
   const platformIcons: Record<string, React.ReactNode> = {
@@ -244,14 +250,42 @@ const AnalyzeData: React.FC = () => {
             {/* --- CHARTS --- */}
             <main className="flex-1 min-w-0 overflow-auto pr-1 scrollbar-thin scrollbar-thumb-gray-700">
 
-              {activeTab === 'Geographic' && (
-                /* Geographic Tab - Only Map */
-                <div className="h-full">
-                  <ChartContainer title="Geographic Distribution" icon1={<Globe size={18} />}>
-                    <div className="h-[calc(100vh-14rem)] overflow-hidden">
-                      <WorldMap studentData={data} />
-                    </div>
-                  </ChartContainer>
+              {activeTab === 'Demographics' && (
+                /* Demographics Tab */
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                  
+                  <div className="h-[480px]">
+                    <ChartContainer title="Gender Distribution" icon1={<Users size={18} />}>
+                      <div className="h-[400px]">
+                        <BarChart data={genderData} xLabel="Gender" yLabel="Count" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Age Distribution" icon1={<Users size={18} />}>
+                      <div className="h-[400px]">
+                        <BarChart data={ageDistributionData} xLabel="Age" yLabel="Count" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Relationship Status" icon1={<Heart size={18} />}>
+                      <div className="h-[400px]">
+                        <DonutChart data={relationshipStatusData} centerText={`${data.length}`} />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
+                  <div className="h-[480px]">
+                    <ChartContainer title="Academic Level Distribution" icon1={<GraduationCap size={18} />}>
+                      <div className="h-[400px]">
+                        <BarChart data={academicLevelData} xLabel="Academic Level" yLabel="Number of Students" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
                 </div>
               )}
 
@@ -402,15 +436,7 @@ const AnalyzeData: React.FC = () => {
                 /* Relationships Tab */
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                  <div className="h-[480px]">
-                    <ChartContainer title="Relationship Status" icon1={<Heart size={18} />}>
-                      <div className="h-[400px]">
-                        <DonutChart data={relationshipStatusData} centerText={`${data.length}`} />
-                      </div>
-                    </ChartContainer>
-                  </div>
-
-                  <div className="h-[480px]">
+                  <div className="h-[480px] xl:col-span-2">
                     <ChartContainer title="Social Media Conflicts" icon1={<Angry size={18} />}>
                       <div className="h-[400px]">
                         <BarChart data={conflictsData} xLabel="Conflict Level" yLabel="Number of Students" />
