@@ -1,7 +1,5 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as d3 from 'd3';
-// 1. Import the library
-import * as ss from 'simple-statistics';
 
 export interface ScatterData {
   x: number;
@@ -54,12 +52,18 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({ data, xLabel = 'X Axis', yL
     if (dimensions.width === 0 || dimensions.height === 0 || data.length < 2) return;
 
     // --- 1. Prepare Data and Calculate Correlation ---
-    // Extract x and y arrays for simple-statistics
-    const xs = data.map(d => d.x);
-    const ys = data.map(d => d.y);
-    
-    // Calculate Pearson Correlation Coefficient
-    const correlationValue = ss.sampleCorrelation(xs, ys);
+    const xMean = d3.mean(data, d => d.x) || 0;
+    const yMean = d3.mean(data, d => d.y) || 0;
+    const xDev = d3.deviation(data, d => d.x) || 0;
+    const yDev = d3.deviation(data, d => d.y) || 0;
+
+    // Calculate Covariance
+    const n = data.length;
+    const covariance = d3.sum(data, d => (d.x - xMean) * (d.y - yMean)) / (n - 1);
+
+    const correlationValue = (xDev === 0 || yDev === 0) ? 0 : covariance / (xDev * yDev);
+
+
     const rText = `r = ${correlationValue.toFixed(3)}`; // Format for display
     
     const svg = d3.select(svgRef.current);
