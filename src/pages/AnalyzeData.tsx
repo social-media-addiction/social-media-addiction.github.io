@@ -383,40 +383,15 @@ const AnalyzeData: React.FC = () => {
               {activeTab === 'Platform Usage' && (
                 /* Platform Usage Tab */
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-                  {/* <div className="h-[480px] xl:col-span-2">
-                    <ChartContainer title="Most Used Platforms" icon1={<FaInstagram size={18} />}>
-                      <div className="h-[400px]">
-                        <BarChart
-                          data={platformUsageBarData}
-                          orientation="horizontal"
-                          xLabel="Number of Students"
-                          yLabel="Platform"
-                          iconMap={platformIcons}
-                        />
-                      </div>
-                    </ChartContainer>
-                  </div> */}
-
                   <div className="h-[490px]">
                     <ChartContainer title="Most Used Platforms" icon1={<FaInstagram size={18} />}>
                       <div className="h-[410px] flex flex-col">
                         {(() => {
                           const PlatformChartSwitcher: React.FC = () => {
-                            const [mode, setMode] = useState<'bubble' | 'bar'>('bubble');
+                            const [mode, setMode] = useState<'bubble' | 'bar'>('bar');
                             return (
                               <div className="h-full flex flex-col">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <button
-                                    type="button"
-                                    onClick={() => setMode('bubble')}
-                                    aria-pressed={mode === 'bubble'}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition cursor-pointer ${mode === 'bubble'
-                                      ? 'bg-[#69b3a2] text-white shadow'
-                                      : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
-                                  >
-                                    Bubble Chart
-                                  </button>
+                                <div className="flex items-center gap-2 mb-3">                           
                                   <button
                                     type="button"
                                     onClick={() => setMode('bar')}
@@ -426,6 +401,16 @@ const AnalyzeData: React.FC = () => {
                                       : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
                                   >
                                     Bar Chart
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setMode('bubble')}
+                                    aria-pressed={mode === 'bubble'}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition cursor-pointer ${mode === 'bubble'
+                                      ? 'bg-[#69b3a2] text-white shadow'
+                                      : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
+                                  >
+                                    Bubble Chart
                                   </button>
                                 </div>
 
@@ -512,6 +497,7 @@ const AnalyzeData: React.FC = () => {
                           xLabel="Avg Daily Usage (hours)"
                           yLabel="% Negatively Affected"
                           color="#10b981"
+                          yDomain={[0,100]}
                         />
                       </div>
                     </ChartContainer>
@@ -525,6 +511,7 @@ const AnalyzeData: React.FC = () => {
                           xLabel="Mental Health Score"
                           yLabel="% Negatively Affected"
                           color="#f59e0b"
+                          yDomain={[0,100]}
                         />
                       </div>
                     </ChartContainer>
@@ -586,7 +573,7 @@ const AnalyzeData: React.FC = () => {
                 /* Platform Profiles Tab */
                 <div>
                   <div className="bg-gray-900 border border-gray-700 shadow-lg rounded-lg p-6 relative mb-2">
-                    <h2 className="text-3xl font-bold mb-3 text-teal-300 inline-flex gap-2"><Users size={32} />Platform Personality Profiles</h2>
+                    <h3 className="text-2xl font-bold text-sky-300 inline-flex gap-2"><Users size={27} />Platform Personality Profiles</h3>
                     <p className="text-gray-400 text-sm mt-2"><b>Higher values =</b> More problematic in that area</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

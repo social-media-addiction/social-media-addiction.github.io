@@ -39,7 +39,7 @@ const MultiSelectCheckboxes: React.FC<MultiSelectCheckboxesProps> = ({ label, op
                 type="checkbox"
                 checked={checked}
                 onChange={() => toggle(opt)}
-                className="accent-sky-300"
+                className="checkbox checkbox-sm rounded-sm bg-white/10 text-teal-300"
               />
               <span className="truncate max-w-[160px]">{key}</span>
             </label>
@@ -145,9 +145,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ originalData, data, activ
           {activeFilterCount > 0 && (
             <button
               onClick={() => setActiveFilters({})}
-              className="text-sm bg-red-400 text-white px-2 py-1 rounded hover:bg-red-700"
+              className="text-sm bg-red-400 text-white px-2 py-1 rounded hover:bg-red-400/80 cursor-pointer transition"
             >
-              Clear All ({activeFilterCount})
+              Clear All 
+              {/* ({activeFilterCount}) */}
             </button>
           )}
         </div>
@@ -202,7 +203,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ originalData, data, activ
                       {selectedValues.slice(0, 5).map((val) => (
                         <span
                           key={String(val)}
-                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium text-cyan-100 bg-cyan-900/40 border border-cyan-700/50 rounded-md"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[12px] font-medium text-cyan-100 bg-cyan-900/40 border border-cyan-700/50 rounded-md"
                         >
                           {String(val).substring(0, 10)}{String(val).length > 10 ? '...' : ''}
                           <button

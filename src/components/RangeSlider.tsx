@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 interface RangeSliderProps {
-  label: string;
+  label?: string;
   min: number; // Dataset min age
   max: number; // Dataset max age
   initialMin: number; // Current selected low age

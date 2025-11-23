@@ -109,7 +109,7 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
               >
                 <input
                   type="checkbox"
-                  className="form-checkbox h-4 w-4 text-purple-600 transition duration-150 ease-in-out"
+                  className="checkbox checkbox-sm rounded-sm bg-white/10 text-teal-300"
                   checked={selectedValues.includes(option)}
                   onChange={() => handleOptionClick(option)}
                 />
