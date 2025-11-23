@@ -6,7 +6,7 @@ import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
 import bgVideo from "../assets/videos/bg-small.mp4";
 
 
-import WorldMap from '../components/WorldMap';
+import WorldMap, { METRIC_OPTIONS } from '../components/WorldMap';
 import { StudentRecord, loadStudentData } from "../data/data";
 import * as d3 from 'd3';
 import RangeSlider from "../components/RangeSlider";
@@ -72,6 +72,7 @@ export default function ExploreRoom() {
   const [conflictMetric, setConflictMetric] = useState<'Mental Health' | 'Daily Usage'>('Mental Health');
   const [academicMetric, setAcademicMetric] = useState<'Daily Usage' | 'Mental Health'>('Daily Usage');
   const [mentalHealthMetric, setMentalHealthMetric] = useState<'Mental Health' | 'Sleep Hours'>('Mental Health');
+  const [mapMetric, setMapMetric] = useState<keyof StudentRecord | "Count">("Count");
 
   useEffect(() => {
     loadStudentData('/data/dataset.csv').then(setData);
@@ -273,7 +274,7 @@ export default function ExploreRoom() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 md:w-2/3 lg:w-1/2 z-40 bg-white/10 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 md:w-3/4 lg:w-3/5 z-40 bg-white/10 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
           >
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -331,7 +332,7 @@ export default function ExploreRoom() {
               </div>
             </div>
 
-            <div className="w-full h-80 md:h-[28rem] relative">
+            <div className="w-full h-96 md:h-[34rem] relative">
               {zoomedSpot === 'academic' && (
   <div className="h-full w-full flex flex-col relative">
     <div className="absolute top-0 left-0 z-10">
@@ -402,8 +403,21 @@ export default function ExploreRoom() {
                 </div>
               )}
               {zoomedSpot === 'geographics' && (
-                <div className="h-full overflow-y-auto custom-scrollbar">
-                   <WorldMap studentData={filteredData} />
+                <div className="h-full w-full flex flex-col relative">
+                  <div className="absolute top-0 left-0 z-10">
+                    <select 
+                      className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
+                      value={mapMetric}
+                      onChange={(e) => setMapMetric(e.target.value as keyof StudentRecord | "Count")}
+                    >
+                      {METRIC_OPTIONS.map((m) => (
+                        <option key={m.key} value={m.key} className="text-black">{m.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1 w-full min-h-0 flex items-center justify-center pt-8">
+                     <WorldMap studentData={filteredData} metric={mapMetric} onMetricChange={setMapMetric} hideControls />
+                  </div>
                 </div>
               )}
             </div>

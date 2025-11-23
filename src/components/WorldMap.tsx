@@ -9,6 +9,7 @@ interface WorldMapProps {
     onCountrySelect?: (country: string, value: number | undefined) => void;
     metric?: keyof StudentRecord | "Count";
     onMetricChange?: (metric: keyof StudentRecord | "Count") => void;
+    hideControls?: boolean;
 }
 
 // Dataset (key) -> Map_Name (value)
@@ -28,7 +29,7 @@ function getMappedCountryName(datasetCountryName: string): string {
     return countryNameMapping.get(datasetCountryName) || datasetCountryName; // return mapped name or original if not found
 }
 
-const METRIC_OPTIONS = [
+export const METRIC_OPTIONS = [
     { key: "Count", label: "Number of Students" },
     { key: "Addicted_Score", label: "Addiction Score" },
     { key: "Avg_Daily_Usage_Hours", label: "Daily Usage (hours)" },
@@ -46,7 +47,7 @@ function aggregateByCountry(data: StudentRecord[], metric: keyof StudentRecord |
     );
 }
 
-const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metric: externalMetric, onMetricChange }) => {
+const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metric: externalMetric, onMetricChange, hideControls }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -147,6 +148,8 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
             .attr("height", height + 80)
             .attr("viewBox", `0 0 ${width} ${height + 80}`)
             .style("max-width", "100%")
+            .style("max-height", "100%")
+            .style("width", "auto")
             .style("height", "auto")
             .style("background", "transparent");
 
@@ -278,19 +281,21 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
     }, [valuemap, countriesData, countryMeshData, metric]);
 
     return (
-        <div ref={containerRef} className="w-full relative">
-            <div className="mb-4">
-                <label className="text-sm text-white mr-3">Select metric:</label>
-                <select
-                    className="bg-gray-800 text-white p-2 rounded border border-gray-600"
-                    value={metric}
-                    onChange={(e) => handleMetricChange(e.target.value as keyof StudentRecord | "Count")}
-                >
-                    {METRIC_OPTIONS.map((m) => (
-                        <option key={m.key} value={m.key}>{m.label}</option>
-                    ))}
-                </select>
-            </div>
+        <div ref={containerRef} className="w-full h-full flex items-center justify-center relative">
+            {!hideControls && (
+                <div className="absolute top-0 left-0 mb-4 z-10">
+                    <label className="text-sm text-white mr-3">Select metric:</label>
+                    <select
+                        className="bg-gray-800 text-white p-2 rounded border border-gray-600"
+                        value={metric}
+                        onChange={(e) => handleMetricChange(e.target.value as keyof StudentRecord | "Count")}
+                    >
+                        {METRIC_OPTIONS.map((m) => (
+                            <option key={m.key} value={m.key}>{m.label}</option>
+                        ))}
+                    </select>
+                </div>
+            )}
             <svg ref={svgRef}></svg>
         </div>
     );
