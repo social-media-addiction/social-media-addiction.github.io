@@ -24,8 +24,8 @@ interface Hotspot {
 const hotspots: Hotspot[] = [
   {
     id: "academic",
-    x: "8%",
-    y: "50%",
+    x: "24%",
+    y: "60%",
     icon: <GraduationCap size={40} color="#59cccaff" />,
     label: "Academic Performance",
     info:
@@ -49,15 +49,7 @@ const hotspots: Hotspot[] = [
     info:
       "Prolonged screen time has been linked to anxiety and sleep issues. Limiting usage and mindful scrolling can support better mental well-being.",
   },
-  {
-    id: "daily-usage",
-    x: "30%",
-    y: "60%",
-    icon: <Clock4 size={28} color="#59cccaff" />,
-    label: "Daily Usage",
-    info:
-      "Understanding average daily social media usage helps identify patterns. Reducing screen time can free up hours for more fulfilling activities.",
-  },
+
   {
     id: "geographics",
     x: "88%",
@@ -80,6 +72,7 @@ export default function ExploreRoom() {
   });
   const [conflictMetric, setConflictMetric] = useState<'Mental Health' | 'Daily Usage'>('Mental Health');
   const [academicMetric, setAcademicMetric] = useState<'Daily Usage' | 'Mental Health'>('Daily Usage');
+  const [mentalHealthMetric, setMentalHealthMetric] = useState<'Mental Health' | 'Sleep Hours'>('Mental Health');
 
   useEffect(() => {
     loadStudentData('/data/dataset.csv').then(setData);
@@ -186,12 +179,15 @@ export default function ExploreRoom() {
     }));
   }, [filteredData]);
 
-  const dailyUsageData = useMemo((): BarChartData[] => {
+  const sleepVsUsageData = useMemo((): ScatterData[] => {
     if (filteredData.length === 0) return [];
-    // Avg Usage by Platform
-    const counts = d3.rollup(filteredData, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Most_Used_Platform);
-    return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
+    return filteredData.map(d => ({
+      x: d.Avg_Daily_Usage_Hours,
+      y: d.Sleep_Hours_Per_Night
+    }));
   }, [filteredData]);
+
+
   
 
   return (
@@ -209,28 +205,24 @@ export default function ExploreRoom() {
           opacity: zoomedSpot ? 0.9 : 1,
           x:
             zoomedSpot === "academic"
-              ? "60%"
+              ? "48%"
               : zoomedSpot === "relationships"
                 ? "0%"
                 : zoomedSpot === "mental-health"
                   ? "0%"
-                  : zoomedSpot === "daily-usage"
-                    ? "48%"
-                      : zoomedSpot === "geographics"
-                        ? "-60%"
-                    : "0%",
+                  : zoomedSpot === "geographics"
+                    ? "-60%"
+                : "0%",
           y:
             zoomedSpot === "academic"
-              ? "-5%"
+              ? "-35%"
               : zoomedSpot === "relationships"
                 ? "0%"
                 : zoomedSpot === "mental-health"
                   ? "-30%"
-                    : zoomedSpot === "daily-usage"
-                      ? "-35%"
-                      : zoomedSpot === "geographics"
-                        ? "5%"
-                  : "0%",
+                  : zoomedSpot === "geographics"
+                    ? "5%"
+              : "0%",
         }}
         transition={{
           duration: 1.2,
@@ -391,22 +383,26 @@ export default function ExploreRoom() {
                 </div>
               )}
               {zoomedSpot === 'mental-health' && (
-                <div className="h-full w-full flex flex-col">
-                  <p className="text-xs text-center mb-2">Mental Health vs Daily Usage</p>
+                <div className="h-full w-full flex flex-col relative">
+                  <div className="absolute top-0 right-0 z-10">
+                    <select 
+                      className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
+                      value={mentalHealthMetric}
+                      onChange={(e) => setMentalHealthMetric(e.target.value as 'Mental Health' | 'Sleep Hours')}
+                    >
+                      <option value="Mental Health" className="text-black">vs Mental Health</option>
+                      <option value="Sleep Hours" className="text-black">vs Sleep Hours</option>
+                    </select>
+                  </div>
+                  <p className="text-xs text-center mb-2">{mentalHealthMetric} vs Daily Usage</p>
                   <div className="h-[500px]">
                     <ScatterGraph 
-                      data={mentalHealthVsUsageData} 
+                      data={mentalHealthMetric === 'Mental Health' ? mentalHealthVsUsageData : sleepVsUsageData} 
                       xLabel="Daily Usage (hours)" 
-                      yLabel="Mental Health Score" 
-                      color="#59cccaff"
+                      yLabel={mentalHealthMetric === 'Mental Health' ? "Mental Health Score" : "Sleep Hours"} 
+                      color={mentalHealthMetric === 'Mental Health' ? "#59cccaff" : "#818cf8"}
                     />
                   </div>
-                </div>
-              )}
-              {zoomedSpot === 'daily-usage' && (
-                 <div className="h-full w-full flex flex-col">
-                   <p className="text-xs text-center mb-2">Avg Daily Usage (Hours) by Platform</p>
-                   <BarChart data={dailyUsageData} orientation="vertical" />
                 </div>
               )}
               {zoomedSpot === 'geographics' && (
