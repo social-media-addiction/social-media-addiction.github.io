@@ -34,7 +34,7 @@ const MultiSelectCheckboxes: React.FC<MultiSelectCheckboxesProps> = ({ label, op
           const key = String(opt);
           const checked = selectedValues.includes(opt);
           return (
-            <label key={key} className="inline-flex items-center gap-2 text-md text-gray-200">
+            <label key={key} className="inline-flex items-center gap-2 text-md text-gray-200 hover:text-[#69b3a2] cursor-pointer">
               <input
                 type="checkbox"
                 checked={checked}
@@ -145,7 +145,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ originalData, data, activ
           {activeFilterCount > 0 && (
             <button
               onClick={() => setActiveFilters({})}
-              className="text-xs bg-[#69b3a2] text-white px-2 py-1 rounded hover:bg-[#5aa090]"
+              className="text-sm bg-red-400 text-white px-2 py-1 rounded hover:bg-red-700"
             >
               Clear All ({activeFilterCount})
             </button>

@@ -14,8 +14,9 @@ import WorldMap from "../components/WorldMap";
 import FilterSidebar from "../components/FilterSideBar";
 
 import { Clock, GraduationCap, Users, Heart, BookOpen, Angry, Brain, Bed, ArrowDownRight, Globe } from "lucide-react";
-import { FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
+import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
+import tiktok from "../assets/tiktok.png";
 
 const AnalyzeData: React.FC = () => {
   const [originalData, setOriginalData] = useState<StudentRecord[]>([]);
@@ -144,7 +145,7 @@ const AnalyzeData: React.FC = () => {
     return Array.from(avgVSSleep, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [data]);
 
-  // --- Relationships Tab Data ---
+  // --- Conflicts & Relationships Tab Data ---
   const relationshipStatusData = useMemo((): DonutChartData[] => {
     if (data.length === 0) return [];
     const counts = d3.rollup(data, v => v.length, d => d.Relationship_Status);
@@ -173,6 +174,12 @@ const AnalyzeData: React.FC = () => {
     });
   }, [data]);
 
+  const conflictsVSMentalHealthData = useMemo((): LineChartData[] => {
+    if (data.length === 0) return [];
+    const avgVSMentalHealth = d3.rollup(data, v => d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0, d => Math.round(d.Mental_Health_Score));
+    return Array.from(avgVSMentalHealth, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [data]);
+
   // --- Demographics Tab Data ---
   const genderData = useMemo((): BarChartData[] => {
     if (data.length === 0) return [];
@@ -195,14 +202,14 @@ const AnalyzeData: React.FC = () => {
     'Mental Health',
     'Academic Performance',
     'Platform Usage',
-    'Relationships',
+    'Conflicts & Relationships',
     'Geographic',
   ];
 
   const platformIcons: Record<string, React.ReactNode> = {
     "Instagram": <FaInstagram size={20} color="#E1306C" />,
     "Twitter": <FaTwitter size={20} color="#1DA1F2" />,
-    "TikTok": <FaTiktok size={20} color="#000000" />,
+    "TikTok": <img src={tiktok} alt="TikTok" className="h-5 w-5" />,
     "YouTube": <FaYoutube size={20} color="#FF0000" />,
     "Facebook": <FaFacebook size={20} color="#1877F2" />,
     "LinkedIn": <FaLinkedin size={20} color="#0A66C2" />,
@@ -227,11 +234,14 @@ const AnalyzeData: React.FC = () => {
           {tabs.map((tab) => (
             <button
               key={tab}
+              title={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${activeTab === tab
-                ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
+              aria-pressed={activeTab === tab}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 outline-none ${
+                activeTab === tab
+                  ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              } cursor-pointer transform hover:-translate-y-0.5 hover:scale-105`}
             >
               {tab}
             </button>
@@ -259,7 +269,7 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Gender Distribution" icon1={<Users size={18} />}>
                       <div className="h-[400px]">
-                        <BarChart data={genderData} xLabel="Gender" yLabel="Count" />
+                        <BarChart data={genderData} xLabel="Gender" yLabel="Number of Students" colours={['#2688a6ff', '#e4694eff']} />
                       </div>
                     </ChartContainer>
                   </div>
@@ -267,7 +277,7 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Age Distribution" icon1={<Users size={18} />}>
                       <div className="h-[400px]">
-                        <BarChart data={ageDistributionData} xLabel="Age" yLabel="Count" />
+                        <BarChart data={ageDistributionData} xLabel="Age" yLabel="Number of Students" />
                       </div>
                     </ChartContainer>
                   </div>
@@ -283,7 +293,7 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Academic Level Distribution" icon1={<GraduationCap size={18} />}>
                       <div className="h-[400px]">
-                        <BarChart data={academicLevelData} xLabel="Academic Level" yLabel="Number of Students" />
+                        <BarChart data={academicLevelData} xLabel="Academic Level" yLabel="Number of Students" colours={['#2688a6ff', '#2ca9b7ff', '#5bcfc9ff']} />
                       </div>
                     </ChartContainer>
                   </div>
@@ -341,7 +351,7 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Overall Academic Impact" icon1={<BookOpen size={18} />}>
                       <div className="h-[400px]">
-                        <PieChart data={academicImpactData} />
+                        <PieChart data={academicImpactData} colours={ ['#f76868ff', '#10b981'] } />
                       </div>
                     </ChartContainer>
                   </div>
@@ -349,7 +359,7 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Average Daily Usage VS Academic Level" icon1={<Clock size={18} />} icon2={<GraduationCap size={18} />}>
                       <div className="h-[400px]">
-                        <BarChart data={avgUsageVSStudentLevelData} xLabel="Academic Level" yLabel="Number of Students" />
+                        <BarChart data={avgUsageVSStudentLevelData} xLabel="Academic Level" yLabel="Avg Daily Usage (hours)" colours={['#2688a6ff', '#2ca9b7ff', '#5bcfc9ff']} />
                       </div>
                     </ChartContainer>
                   </div>
@@ -434,22 +444,29 @@ const AnalyzeData: React.FC = () => {
                 </div>
               )}
 
-              {activeTab === 'Relationships' && (
+              {activeTab === 'Conflicts & Relationships' && (
                 /* Relationships Tab */
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                  <div className="h-[480px] xl:col-span-2">
+                  <div className="h-[480px] ">
                     <ChartContainer title="Social Media Conflicts" icon1={<Angry size={18} />}>
                       <div className="h-[400px]">
-                        <BarChart data={conflictsData} xLabel="Conflict Level" yLabel="Number of Students" />
+                        <BarChart data={conflictsData} xLabel="Number of Conflicts" yLabel="Number of Students" />
                       </div>
                     </ChartContainer>
                   </div>
 
-                  <div className="h-[480px] xl:col-span-2">
+                  <div className="h-[480px] ">
                     <ChartContainer title="Conflicts VS Relationship Status" icon1={<Angry size={18} />} icon2={<Heart size={18} />}>
                       <div className="h-[400px]">
-                        <BoxPlot data={conflictsVSRelationshipData} yMax={conflictsYMax} />
+                        <BoxPlot data={conflictsVSRelationshipData} yMax={conflictsYMax} yLabel="Number of Conflicts" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+                  <div className="h-[480px] xl:col-span-2">
+                    <ChartContainer title="Conflicts VS Mental Health" icon1={<Angry size={18} />} icon2={<Brain size={18} />}>
+                      <div className="h-[400px]">
+                        <LineChart data={conflictsVSMentalHealthData} xLabel="Mental Health Score" yLabel="Number of Conflicts" />
                       </div>
                     </ChartContainer>
                   </div>

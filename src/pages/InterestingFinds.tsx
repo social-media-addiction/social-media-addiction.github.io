@@ -8,8 +8,9 @@ import PieChart, { PieChartData } from "../components/PieChart";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from "../components/ScatterGraph";
 import { Brain, Clock, BookOpen, Bed, Zap, Activity, TrendingUp } from "lucide-react";
-import { FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
+import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
+import tiktok from "../assets/tiktok.png";
 
 const InterestingFinds: React.FC = () => {
   const [data, setData] = useState<StudentRecord[]>([]);
@@ -27,7 +28,7 @@ const InterestingFinds: React.FC = () => {
   const platformIcons: Record<string, React.ReactNode> = {
     "Instagram": <FaInstagram size={20} color="#E1306C" />,
     "Twitter": <FaTwitter size={20} color="#1DA1F2" />,
-    "TikTok": <FaTiktok size={20} color="#000000" />,
+    "TikTok": <img src={tiktok} alt="TikTok" className="h-5 w-5" />,
     "YouTube": <FaYoutube size={20} color="#FF0000" />,
     "Facebook": <FaFacebook size={20} color="#1877F2" />,
     "LinkedIn": <FaLinkedin size={20} color="#0A66C2" />,
@@ -94,51 +95,61 @@ const InterestingFinds: React.FC = () => {
       </div>
 
       <div className="relative z-10 container mx-auto px-4 pb-12">
-        
+
         {/* Header */}
 
         {/* Key Metrics Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
-          <MetricCard 
-            title="Avg Daily Usage" 
-            value={`${insights.avgUsage.toFixed(2)}h`} 
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+          <MetricCard
+            title="Avg Daily Usage"
+            value={`${insights.avgUsage.toFixed(2)}h`}
             icon={<Clock className="text-teal-400" size={20} />}
           />
-          <MetricCard 
-            title="Avg Sleep" 
-            value={`${insights.avgSleep.toFixed(1)}h`} 
+          <MetricCard
+            title="Peak Usage Age"
+            value={`${Array.from(insights.usageByAge.entries()).sort((a, b) => b[1] - a[1])[0]?.[0]} yrs`}
+            icon={<TrendingUp className="text-green-400" size={20} />}
+          />
+          <MetricCard
+            title="Avg Sleep"
+            value={`${insights.avgSleep.toFixed(1)}h`}
             icon={<Bed className="text-indigo-400" size={20} />}
           />
-          <MetricCard 
-            title="Mental Health" 
-            value={`${insights.avgMentalHealth.toFixed(1)}`} 
+          <MetricCard
+            title="Avg Mental Health"
+            value={
+              <span className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{insights.avgMentalHealth.toFixed(1)}</span>
+                <span className="text-sm text-gray-400">/10</span>
+              </span>
+            }
             icon={<Brain className="text-pink-400" size={20} />}
           />
-          <MetricCard 
-            title="Top Platform" 
-            value={insights.topPlatform} 
-            icon={<Zap className="text-yellow-400" size={20} />}
+          <MetricCard
+            title="Top Platform"
+            value={insights.topPlatform}
+            icon={<FaInstagram className="text-orange-400" size={20} />}
           />
-          <MetricCard 
-            title="Addiction/Sleep" 
-            value={insights.addictionVsSleep.toFixed(2)} 
-            icon={<Activity className="text-red-400" size={20} />}
+          <MetricCard
+            title="Addiction/Sleep"
+            value={insights.addictionVsSleep.toFixed(3)}
+            icon={<Activity className="text-yellow-400" size={20} />}
           />
         </div>
 
         {/* Charts Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-10">
-          
+
           {/* Row 1 */}
 
 
           <ChartContainer title="Platform Popularity" icon1={<Zap size={18} />}>
             <div className="h-[300px]">
-              <BarChart 
-                data={platformChartData} 
+              <BarChart
+                data={platformChartData}
                 orientation="horizontal"
-                xLabel="Users" 
-                yLabel="Platform" 
+                xLabel="Users"
+                yLabel="Platform"
                 iconMap={platformIcons}
               />
             </div>
@@ -153,7 +164,7 @@ const InterestingFinds: React.FC = () => {
           {/* Row 2 */}
           <ChartContainer title="Academic Impact" icon1={<BookOpen size={18} />}>
             <div className="h-[300px]">
-              <PieChart data={academicPieData} />
+              <PieChart data={academicPieData} colours={ ['#e25b5bff', '#10b981'] } />
             </div>
           </ChartContainer>
 
@@ -180,7 +191,7 @@ const InterestingFinds: React.FC = () => {
         </div>
 
         {/* Key Insights Section */}
-        <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-8 shadow-xl">
+        {/* <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-xl p-8 shadow-xl">
           <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
             <Zap className="text-yellow-400" />
             Key Takeaways
@@ -203,7 +214,7 @@ const InterestingFinds: React.FC = () => {
               </ul>
             </div>
           </div>
-        </div>
+        </div> */}
 
       </div>
     </div>
@@ -211,7 +222,7 @@ const InterestingFinds: React.FC = () => {
 };
 
 // Helper Components for cleaner code
-const MetricCard = ({ title, value, icon, trend, trendUp }: { title: string, value: string, icon: React.ReactNode, trend?: string, trendUp?: boolean }) => (
+const MetricCard = ({ title, value, icon, trend, trendUp }: { title: string, value: React.ReactNode, icon: React.ReactNode, trend?: string, trendUp?: boolean }) => (
   <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-5 rounded-xl hover:bg-white/10 transition-all duration-300 group">
     <div className="flex justify-between items-start mb-2">
       <span className="text-gray-400 text-sm font-medium">{title}</span>

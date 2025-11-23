@@ -55,7 +55,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, centerText }) => {
       .attr('transform', `translate(${width / 2},${height / 2})`);
 
     // Color scale - stable colors that don't change with filters
-    const colorPalette = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#f59e0b'];
+    const colorPalette = ['#8b5cf6', '#ec4899', '#3b82f6', '#f97316', '#14b8a6', '#f59e0b'];
     
     // Get all unique labels and sort them for consistency
     const sortedLabels = data.map(d => d.label).sort();

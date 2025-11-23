@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 
 interface MultiSelectDropdownProps {
   label: string;
@@ -17,6 +17,17 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredOptions = useMemo(() => {
+    if (!searchTerm) {
+      return options; // Show all if no search term
+    }
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return options.filter((option) =>
+      String(option).toLowerCase().includes(lowerCaseSearchTerm)
+    );
+  }, [options, searchTerm]); // Recalculate only when options or search term changes
 
   const handleToggle = () => {
     setIsOpen((prev) => !prev);
@@ -68,10 +79,30 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
         </svg>
       </button>
 
-      {isOpen && (
+     {isOpen && (
         <div className="absolute z-20 w-full mt-1 bg-gray-800 rounded-md shadow-lg max-h-60 overflow-y-auto">
+           <div className="border-t border-gray-700 p-2">
+            <button
+              onClick={() => {
+                onClear();
+                setIsOpen(false); 
+                setSearchTerm(''); // Also clear search term on clear
+              }}
+              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-1 px-2 rounded text-sm"
+            >
+              Clear Filter
+            </button>
+          </div>
+          <div className="border-t border-gray-700"></div>
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            className="w-full p-2 bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <div className="p-2">
-            {options.map((option) => (
+            {filteredOptions.map((option) => ( 
               <label
                 key={String(option)}
                 className="flex items-center p-2 rounded hover:bg-gray-700 cursor-pointer"
@@ -85,18 +116,11 @@ const MultiSelectDropdown: React.FC<MultiSelectDropdownProps> = ({
                 <span className="ml-2 text-gray-300">{String(option)}</span>
               </label>
             ))}
+            {filteredOptions.length === 0 && (
+                <p className="p-2 text-sm text-gray-400">No results found for "{searchTerm}"</p>
+            )}
           </div>
-          <div className="border-t border-gray-700 p-2">
-            <button
-              onClick={() => {
-                onClear();
-                setIsOpen(false); // Close dropdown after clearing
-              }}
-              className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-1 px-2 rounded text-sm"
-            >
-              Clear Filter
-            </button>
-          </div>
+         
         </div>
       )}
     </div>

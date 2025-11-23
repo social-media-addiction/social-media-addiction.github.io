@@ -15,9 +15,11 @@ export interface BoxPlotData {
 interface BoxPlotProps {
   data: BoxPlotData[];
   yMax: number;
+  xLabel?: string; // Optional x-axis label
+  yLabel?: string; // Optional y-axis label
 }
 
-const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
+const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax, xLabel, yLabel }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -96,7 +98,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax }) => {
         .attr("x",0 - (chartHeight / 2))
         .attr("dy", "1em")
         .style("text-anchor", "middle")
-        .text("Avg Daily Usage (Hours)")
+        .text(yLabel || "Avg Daily Usage (Hours)")
         .attr("fill", "white")
         .attr("font-size", 13)
         .attr("font-weight", "500");

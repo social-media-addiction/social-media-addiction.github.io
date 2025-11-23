@@ -27,10 +27,10 @@ const hotspots: Hotspot[] = [
   },
   {
     id: "relationships",
-    x: "50%",
+    x: "48.5%",
     y: "51%",
     icon: <Users size={28} color="#59cccaff" />,
-    label: "Relationships",
+    label: "Conflicts & Relationships",
     info:
       "Social media can connect people but may also cause tension and comparison. Healthy online boundaries strengthen real-world relationships.",
   },
