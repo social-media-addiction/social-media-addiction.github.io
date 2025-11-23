@@ -3,7 +3,6 @@ import { ReactElement, useState, useEffect, useMemo } from "react";
 import { Brain, Users, GraduationCap, Search, Globe, Clock4 } from "lucide-react";
 import bgVideo from "../assets/videos/bg-small.mp4";
 import BarChart, { BarChartData } from '../components/BarChart';
-import SpiderChart, { SpiderChartSeries } from '../components/SpiderChart';
 
 import WorldMap from '../components/WorldMap';
 import { StudentRecord, loadStudentData } from "../data/data";
@@ -116,8 +115,9 @@ export default function ExploreRoom() {
       if (filters.academicLevel !== 'All' && d.Academic_Level !== filters.academicLevel) return false;
       if (filters.ageRange !== 'All') {
         const age = d.Age;
-        if (filters.ageRange === '18-21' && (age < 18 || age > 21)) return false;
-        if (filters.ageRange === '22-25' && (age < 22 || age > 25)) return false;
+        // Parse the age range string like "18-24"
+        const [minAge, maxAge] = filters.ageRange.split('-').map(Number);
+        if (age < minAge || age > maxAge) return false;
       }
       return true;
     });
@@ -138,25 +138,23 @@ export default function ExploreRoom() {
     return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
   }, [filteredData]);
 
-  const mentalHealthData = useMemo((): SpiderChartSeries[] => {
+  const mentalHealthData = useMemo((): BarChartData[] => {
     if (filteredData.length === 0) return [];
     
-    const avgMental = d3.mean(filteredData, d => d.Mental_Health_Score) || 0;
-    const avgAddiction = d3.mean(filteredData, d => d.Addicted_Score) || 0;
-    const avgSleep = d3.mean(filteredData, d => d.Sleep_Hours_Per_Night) || 0;
-    const avgUsage = d3.mean(filteredData, d => d.Avg_Daily_Usage_Hours) || 0;
-
-    // Normalize to roughly 0-10 scale for comparison
-    return [{
-      name: "Average Stats",
-      color: "#59cccaff",
-      data: [
-        { axis: "Mental Health", value: avgMental },
-        { axis: "Addiction (x2)", value: avgAddiction * 2 },
-        { axis: "Sleep (Hrs)", value: avgSleep },
-        { axis: "Usage (Hrs)", value: avgUsage }
-      ]
-    }];
+    // Group by addiction score ranges and calculate avg mental health
+    const grouped = d3.rollup(
+      filteredData,
+      v => d3.mean(v, d => d.Mental_Health_Score) || 0,
+      d => {
+        const score = d.Addicted_Score;
+        if (score <= 1) return 'Low (0-1)';
+        if (score <= 2) return 'Medium (1-2)';
+        if (score <= 3) return 'High (2-3)';
+        return 'Very High (3+)';
+      }
+    );
+    
+    return Array.from(grouped, ([label, value]) => ({ label, value }));
   }, [filteredData]);
 
   const dailyUsageData = useMemo((): BarChartData[] => {
@@ -330,7 +328,10 @@ export default function ExploreRoom() {
                 </div>
               )}
               {zoomedSpot === 'mental-health' && (
-                <SpiderChart data={mentalHealthData} config={{ levels: 5, maxValue: 15, height: 700, width: 700 }} />
+                <div className="h-full w-full flex flex-col">
+                  <p className="text-xs text-center mb-2">Mental Health Score by Addiction Level</p>
+                  <BarChart data={mentalHealthData} orientation="vertical" yLabel="Avg Mental Health Score" xLabel="Addiction Level" />
+                </div>
               )}
               {zoomedSpot === 'daily-usage' && (
                  <div className="h-full w-full flex flex-col">
