@@ -248,7 +248,7 @@ export default function ExploreRoom() {
           hotspots.map((spot) => (
             <motion.button
               key={spot.id}
-              className="absolute z-30 text-white hover:text-primary transition-transform text-center"
+              className="absolute z-30 text-white hover:text-primary transition-transform text-center cursor-pointer"
               style={{ top: spot.y, left: spot.x }}
               whileHover={{ scale: 1.2 }}
               initial={{ opacity: 0 }}

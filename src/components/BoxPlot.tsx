@@ -104,9 +104,9 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax, yLabel }) => {
         .attr("font-weight", "500");
 
     // Color scale for vibrant colors
-    const colorScale = d3.scaleOrdinal()
-      .domain(categories)
-      .range(['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#f59e0b']);
+    const colorScale = d3.scaleOrdinal<string>()
+            .domain(data.map((d) => d.key))
+            .range(["#ee5975ff", "#38bdf8", "#141417ff", "#ee615aff", "#38bdf8", "#223485ff", "#d99a41ff", "#54c776ff", "#d99a41ff", "#38bdf8", "#54c776ff", "#54c776ff"]);
 
     data.forEach((d) => {
       const { key, values } = d;

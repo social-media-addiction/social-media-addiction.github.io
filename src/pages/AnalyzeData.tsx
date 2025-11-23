@@ -18,6 +18,7 @@ import { Clock, GraduationCap, Users, Heart, BookOpen, Angry, Brain, Bed, ArrowD
 import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
 import tiktok from "../assets/tiktok.png";
+import BubbleChart from "../components/BubbleChart";
 
 const AnalyzeData: React.FC = () => {
   const [originalData, setOriginalData] = useState<StudentRecord[]>([]);
@@ -78,7 +79,7 @@ const AnalyzeData: React.FC = () => {
   // Platform Personality Profiles
   const platformProfiles = useMemo(() => {
     if (data.length === 0) return [];
-    
+
     // Determine fixed platform order based on originalData (unfiltered)
     const platformUsageCounts = d3.rollup(
       originalData,
@@ -88,8 +89,8 @@ const AnalyzeData: React.FC = () => {
     const topPlatformsByOriginal = Array.from(platformUsageCounts.entries())
       .sort((a, b) => b[1] - a[1])
       .slice(0, 4)
-      .map(([platform]) => platform);
-    
+      .map(([platform,]) => platform);
+
     // Calculate stats from filtered data
     const platformStats = d3.rollup(
       data,
@@ -103,8 +104,11 @@ const AnalyzeData: React.FC = () => {
       d => d.Most_Used_Platform
     );
 
-    // Return platforms in the fixed order
-    return topPlatformsByOriginal.map(platform => {
+    // Color palette to use for platform profiles
+    const colors = ['#ec59a5ff', '#90d1d6ff',  '#60a5fa', '#34d399'];
+
+    // Return platforms in the fixed order, assigning colors from the palette
+    return topPlatformsByOriginal.map((platform, idx) => {
       const stats = platformStats.get(platform) || {
         addiction: 0,
         sleepLoss: 0,
@@ -112,12 +116,12 @@ const AnalyzeData: React.FC = () => {
         academicImpact: 0,
         mentalDamage: 0
       };
-      
+
       return {
         platform,
         data: [{
           name: platform,
-          color: "#f97316",
+          color: colors[idx % colors.length],
           data: [
             { axis: "Addiction", value: stats.addiction },
             { axis: "Sleep Loss", value: stats.sleepLoss },
@@ -129,6 +133,12 @@ const AnalyzeData: React.FC = () => {
       };
     });
   }, [data, originalData]);
+
+  const platformUsageBubbleData = useMemo((): { id: string; value: number }[] => {
+    if (data.length === 0) return [];
+    const counts = d3.rollup(data, v => v.length, d => d.Most_Used_Platform);
+    return Array.from(counts, ([id, value]) => ({ id, value }));
+  }, [data]);
 
   // --- Academic Performance Tab Data ---
   const academicImpactData = useMemo((): PieChartData[] => {
@@ -265,9 +275,9 @@ const AnalyzeData: React.FC = () => {
     'Geographics',
     'Mental Health',
     'Academic Performance',
+    'Conflicts & Relationships',
     'Platform Usage',
     'Platform Profiles',
-    'Conflicts & Relationships',
   ];
 
   const platformIcons: Record<string, React.ReactNode> = {
@@ -302,8 +312,8 @@ const AnalyzeData: React.FC = () => {
               onClick={() => setActiveTab(tab)}
               aria-pressed={activeTab === tab}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 outline-none ${activeTab === tab
-                  ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
                 } cursor-pointer transform hover:-translate-y-0.5 hover:scale-105`}
             >
               {tab}
@@ -376,7 +386,7 @@ const AnalyzeData: React.FC = () => {
                 /* Platform Usage Tab */
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                  <div className="h-[480px] xl:col-span-2">
+                  {/* <div className="h-[480px] xl:col-span-2">
                     <ChartContainer title="Most Used Platforms" icon1={<FaInstagram size={18} />}>
                       <div className="h-[400px]">
                         <BarChart
@@ -388,14 +398,23 @@ const AnalyzeData: React.FC = () => {
                         />
                       </div>
                     </ChartContainer>
+                  </div> */}
+
+                  <div className="h-[490px]">
+                    <ChartContainer title="Most Used Platforms" icon1={<FaInstagram size={18} />}>
+                      <div className="h-[410px]">
+                        <BubbleChart data={platformUsageBubbleData} height={435} iconMap={platformIcons} />
+                      </div>
+                    </ChartContainer>
                   </div>
 
 
-                  <div className="h-[480px] xl:col-span-2">
+                  <div className="h-[490px]">
                     <ChartContainer title="Platform VS Mental Health" icon1={<FaInstagram size={18} />} icon2={<Brain size={18} />}>
-                      <div className="h-[400px]">
+                      <div className="h-[410px]">
                         <BarChart
                           data={platformByMentalHealthData}
+                          orientation="horizontal"
                           xLabel="Platform"
                           yLabel="Avg Mental Health Score"
                           iconMap={platformIcons}
@@ -406,7 +425,7 @@ const AnalyzeData: React.FC = () => {
 
                   <div className="h-[480px] xl:col-span-2">
                     <ChartContainer title="Usage Distribution VS Platform" icon1={<Clock size={18} />} icon2={<FaInstagram size={18} />}>
-                      <div className="h-[400px]">
+                      <div className="h-[410px]">
                         <BoxPlot data={usageBoxPlotData} yMax={yMax} />
                       </div>
                     </ChartContainer>
@@ -510,18 +529,15 @@ const AnalyzeData: React.FC = () => {
                       </div>
                     </ChartContainer>
                   </div>
-
-
                 </div>
               )}
 
               {activeTab === 'Platform Profiles' && (
                 /* Platform Profiles Tab */
                 <div>
-                  <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold mb-3 text-teal-300">🎭 Platform Personality Profiles</h2>
-                    <p className="text-gray-300 text-sm">Each platform's "danger profile" across 5 key dimensions</p>
-                    <p className="text-gray-400 text-xs mt-2">Higher values = More problematic in that area</p>
+                  <div className="bg-gray-900 border border-gray-700 shadow-lg rounded-lg p-6 relative mb-2">
+                    <h2 className="text-3xl font-bold mb-3 text-teal-300 inline-flex gap-2"><Users size={32} />Platform Personality Profiles</h2>
+                    <p className="text-gray-400 text-sm mt-2"><b>Higher values =</b> More problematic in that area</p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {platformProfiles.map(({ platform, data: profileData }) => (
