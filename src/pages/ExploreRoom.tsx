@@ -45,7 +45,7 @@ const hotspots: Hotspot[] = [
     x: "46%",
     y: "72%",
     icon: <Brain size={28} color="#59cccaff" />,
-    label: "Mental Health",
+    label: "Mental Health & Sleep",
     info:
       "Prolonged screen time has been linked to anxiety and sleep issues. Limiting usage and mindful scrolling can support better mental well-being.",
   },
@@ -98,7 +98,7 @@ export default function ExploreRoom() {
   // Wait for zoom animation to complete before showing info card
   useEffect(() => {
     if (zoomedSpot) {
-      const timer = setTimeout(() => setShowInfo(true), 900); // slight delay
+      const timer = setTimeout(() => setShowInfo(true), 500); // slight delay
       return () => clearTimeout(timer);
     } else {
       setShowInfo(false);
@@ -224,7 +224,7 @@ export default function ExploreRoom() {
               : "0%",
         }}
         transition={{
-          duration: 1.2,
+          duration: 0.8,
           ease: [0.76, 0, 0.24, 1], // cinematic in/out easing
         }}
       >
@@ -271,7 +271,7 @@ export default function ExploreRoom() {
       <motion.div
         className={`absolute inset-0 bg-black z-10 ${zoomedSpot ? 'cursor-pointer' : 'pointer-events-none'}`}
         animate={{ opacity: zoomedSpot ? 0.25 : 0.1 }}
-        transition={{ duration: 0.8, ease: "easeInOut" }}
+        transition={{ duration: zoomedSpot ? 0.8 : 0.5, ease: "easeInOut" }}
         onClick={() => setZoomedSpot(null)}
       />
 
@@ -283,7 +283,7 @@ export default function ExploreRoom() {
             initial={{ opacity: 0, y: 40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
             className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 md:w-2/3 lg:w-1/2 z-40 bg-white/10 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
           >
             <div className="flex justify-between items-start mb-4">
