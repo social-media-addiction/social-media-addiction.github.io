@@ -9,6 +9,7 @@ import LineChart, { LineChartData } from '../components/LineChart';
 import PieChart, { PieChartData } from '../components/PieChart';
 import DonutChart, { DonutChartData } from '../components/DonutChart';
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
+import SpiderChart from '../components/SpiderChart';
 import WorldMap from "../components/WorldMap";
 
 import FilterSidebar from "../components/FilterSideBar";
@@ -72,6 +73,61 @@ const AnalyzeData: React.FC = () => {
       return { key: String(key), values: { q1, median, q3, min, max } };
     });
   }, [data]);
+
+  // Platform Personality Profiles
+  const platformProfiles = useMemo(() => {
+    if (data.length === 0) return [];
+    
+    // Determine fixed platform order based on originalData (unfiltered)
+    const platformUsageCounts = d3.rollup(
+      originalData,
+      v => v.length,
+      d => d.Most_Used_Platform
+    );
+    const topPlatformsByOriginal = Array.from(platformUsageCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([platform]) => platform);
+    
+    // Calculate stats from filtered data
+    const platformStats = d3.rollup(
+      data,
+      v => ({
+        addiction: d3.mean(v, d => d.Addicted_Score) || 0,
+        sleepLoss: 8 - (d3.mean(v, d => d.Sleep_Hours_Per_Night) || 7),
+        conflicts: d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0,
+        academicImpact: (v.filter(d => d.Affects_Academic_Performance).length / v.length) * 5,
+        mentalDamage: 10 - (d3.mean(v, d => d.Mental_Health_Score) || 5)
+      }),
+      d => d.Most_Used_Platform
+    );
+
+    // Return platforms in the fixed order
+    return topPlatformsByOriginal.map(platform => {
+      const stats = platformStats.get(platform) || {
+        addiction: 0,
+        sleepLoss: 0,
+        conflicts: 0,
+        academicImpact: 0,
+        mentalDamage: 0
+      };
+      
+      return {
+        platform,
+        data: [{
+          name: platform,
+          color: "#f97316",
+          data: [
+            { axis: "Addiction", value: stats.addiction },
+            { axis: "Sleep Loss", value: stats.sleepLoss },
+            { axis: "Conflicts", value: stats.conflicts },
+            { axis: "Academic Impact", value: stats.academicImpact },
+            { axis: "Mental Damage", value: stats.mentalDamage }
+          ]
+        }]
+      };
+    });
+  }, [data, originalData]);
 
   // --- Academic Performance Tab Data ---
   const academicImpactData = useMemo((): PieChartData[] => {
@@ -202,6 +258,7 @@ const AnalyzeData: React.FC = () => {
     'Mental Health',
     'Academic Performance',
     'Platform Usage',
+    'Platform Profiles',
     'Conflicts & Relationships',
     'Geographic',
   ];
@@ -449,6 +506,28 @@ const AnalyzeData: React.FC = () => {
                   </div>
 
 
+                </div>
+              )}
+
+              {activeTab === 'Platform Profiles' && (
+                /* Platform Profiles Tab */
+                <div>
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold mb-3 text-teal-300">🎭 Platform Personality Profiles</h2>
+                    <p className="text-gray-300 text-sm">Each platform's "danger profile" across 5 key dimensions</p>
+                    <p className="text-gray-400 text-xs mt-2">Higher values = More problematic in that area</p>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {platformProfiles.map(({ platform, data: profileData }) => (
+                      <div key={platform} className="h-[420px]">
+                        <ChartContainer title={platform} icon1={platformIcons[platform] as React.ReactElement}>
+                          <div className="h-[340px]">
+                            <SpiderChart data={profileData} config={{ levels: 5, maxValue: 5 }} />
+                          </div>
+                        </ChartContainer>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
