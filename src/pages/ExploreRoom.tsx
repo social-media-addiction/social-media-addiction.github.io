@@ -8,6 +8,7 @@ import SpiderChart, { SpiderChartSeries } from '../components/SpiderChart';
 import WorldMap from '../components/WorldMap';
 import { StudentRecord, loadStudentData } from "../data/data";
 import * as d3 from 'd3';
+import RangeSlider from "../components/RangeSlider";
 
 interface Hotspot {
   id: string;
@@ -80,6 +81,23 @@ export default function ExploreRoom() {
     loadStudentData('/data/dataset.csv').then(setData);
   }, []);
 
+  // Derived age bounds for the RangeSlider and a handler for changes
+  const ageBounds = useMemo(() => {
+    if (data.length === 0) {
+      return { min: 18, max: 24, rangeMin: 18, rangeMax: 24 };
+    }
+    const ages = data.map(d => d.Age);
+    const min = Math.min(...ages);
+    const max = Math.max(...ages);
+    return { min, max, rangeMin: min, rangeMax: max };
+  }, [data]);
+
+  const prop = "age-slider";
+  const label = "Age Range";
+  const handleAgeRangeChange = (min: number, max: number) => {
+    setFilters(prev => ({ ...prev, ageRange: `${min}-${max}` }));
+  };
+
   // Wait for zoom animation to complete before showing info card
   useEffect(() => {
     if (zoomedSpot) {
@@ -147,6 +165,7 @@ export default function ExploreRoom() {
     const counts = d3.rollup(filteredData, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Most_Used_Platform);
     return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
   }, [filteredData]);
+  
 
   return (
     <div className="relative h-screen overflow-hidden">
@@ -265,9 +284,8 @@ export default function ExploreRoom() {
                   <option value="All" className="text-black">All Genders</option>
                   <option value="Male" className="text-black">Male</option>
                   <option value="Female" className="text-black">Female</option>
-                  <option value="Non-binary" className="text-black">Non-binary</option>
                 </select>
-                <select 
+                {/* <select 
                   className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-white focus:outline-none focus:border-teal-400"
                   value={filters.ageRange}
                   onChange={(e) => setFilters({...filters, ageRange: e.target.value})}
@@ -275,7 +293,7 @@ export default function ExploreRoom() {
                   <option value="All" className="text-black">All Ages</option>
                   <option value="18-21" className="text-black">18 - 21</option>
                   <option value="22-25" className="text-black">22 - 25</option>
-                </select>
+                </select> */}
                 <select 
                   className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-white focus:outline-none focus:border-teal-400"
                   value={filters.academicLevel}
@@ -286,14 +304,23 @@ export default function ExploreRoom() {
                   <option value="Undergraduate" className="text-black">Undergraduate</option>
                   <option value="Graduate" className="text-black">Graduate</option>
                 </select>
+                <RangeSlider
+                  key={prop}
+                  label={label}
+                  min={ageBounds.min}
+                  max={ageBounds.max}
+                  initialMin={ageBounds.rangeMin}
+                  initialMax={ageBounds.rangeMax}
+                  onChange={handleAgeRangeChange}
+                />
               </div>
             </div>
 
-            <div className="w-full h-64 md:h-80 relative">
+            <div className="w-full h-80 md:h-[28rem] relative">
               {zoomedSpot === 'academic' && (
                 <div className="h-full w-full flex flex-col">
-                   <p className="text-xs text-center mb-2">Does Social Media Affect Academic Performance? (Avg Daily Usage Hours)</p>
-                   <BarChart data={academicData} orientation="vertical" />
+                   <p className="text-xs text-center mb-2">Academic Performance VS Social Media Usage</p>
+                   <BarChart data={academicData} orientation="vertical" yLabel="Avg Daily Usage (Hours)" xLabel="Does Social Media Affect Academic Performance?" />
                 </div>
               )}
               {zoomedSpot === 'relationships' && (
@@ -303,7 +330,7 @@ export default function ExploreRoom() {
                 </div>
               )}
               {zoomedSpot === 'mental-health' && (
-                <SpiderChart data={mentalHealthData} config={{ levels: 5 }} />
+                <SpiderChart data={mentalHealthData} config={{ levels: 5, maxValue: 15, height: 700, width: 700 }} />
               )}
               {zoomedSpot === 'daily-usage' && (
                  <div className="h-full w-full flex flex-col">
@@ -330,7 +357,7 @@ export default function ExploreRoom() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.4 }}
-            className="absolute top-5 right-5 z-50 btn btn-sm bg-[#69b3a2] text-black font-semibold shadow-lg"
+            className="absolute top-5 right-5 z-50 px-4 py-2 rounded-md text-sm font-medium bg-[#69b3a2]  transition-all duration-200 outline-none text-white shadow-xl shadow-[#69b3a2]/30 hover:bg-teal-500 cursor-pointer transform hover:-translate-y-0.5 hover:scale-105"
           >
             Exit Zoom
           </motion.button>

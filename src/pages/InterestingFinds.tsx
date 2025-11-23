@@ -7,7 +7,7 @@ import BarChart, { BarChartData } from "../components/BarChart";
 import PieChart, { PieChartData } from "../components/PieChart";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from "../components/ScatterGraph";
-import { Brain, Clock, BookOpen, Bed, Zap, Activity, TrendingUp } from "lucide-react";
+import { Brain, Clock, BookOpen, Bed, Zap, Activity, TrendingUp, Users } from "lucide-react";
 import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
 import tiktok from "../assets/tiktok.png";
@@ -73,8 +73,10 @@ const InterestingFinds: React.FC = () => {
     return insights.sleepVsAddiction.map(d => ({ x: d.sleep, y: d.addiction }));
   }, [insights]);
 
-
-
+  const studentsAffectedAcademically = useMemo(() => {
+    if (!insights) return 0;
+    return ((insights.academicImpact.yes / data.length) * 100).toFixed(1);
+  }, [insights]);
 
 
   if (!data.length || !insights) {
@@ -100,20 +102,22 @@ const InterestingFinds: React.FC = () => {
 
         {/* Key Metrics Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+
           <MetricCard
-            title="Avg Daily Usage"
-            value={`${insights.avgUsage.toFixed(2)}h`}
-            icon={<Clock className="text-teal-400" size={20} />}
+            title="Students Affected Academically"
+            value={`${studentsAffectedAcademically}%`}
+            icon={<BookOpen className="text-red-400" size={20} />}
           />
           <MetricCard
             title="Peak Usage Age"
             value={`${Array.from(insights.usageByAge.entries()).sort((a, b) => b[1] - a[1])[0]?.[0]} yrs`}
-            icon={<TrendingUp className="text-green-400" size={20} />}
+            icon={<Users className="text-green-400" size={20} />}
           />
+
           <MetricCard
-            title="Avg Sleep"
-            value={`${insights.avgSleep.toFixed(1)}h`}
-            icon={<Bed className="text-indigo-400" size={20} />}
+            title="Top Platform"
+            value={insights.topPlatform}
+            icon={<FaInstagram className="text-pink-400" size={20} />}
           />
           <MetricCard
             title="Avg Mental Health"
@@ -123,18 +127,20 @@ const InterestingFinds: React.FC = () => {
                 <span className="text-sm text-gray-400">/10</span>
               </span>
             }
-            icon={<Brain className="text-pink-400" size={20} />}
+            icon={<Brain className="text-orange-400" size={20} />}
           />
           <MetricCard
-            title="Top Platform"
-            value={insights.topPlatform}
-            icon={<FaInstagram className="text-orange-400" size={20} />}
+            title="Avg Sleep"
+            value={`${insights.avgSleep.toFixed(1)}h`}
+            icon={<Bed className="text-indigo-400" size={20} />}
           />
+
           <MetricCard
-            title="Addiction/Sleep"
-            value={insights.addictionVsSleep.toFixed(3)}
-            icon={<Activity className="text-yellow-400" size={20} />}
+            title="Avg Daily Usage"
+            value={`${insights.avgUsage.toFixed(2)}h`}
+            icon={<Clock className="text-teal-400" size={20} />}
           />
+
         </div>
 
         {/* Charts Grid */}
@@ -142,8 +148,18 @@ const InterestingFinds: React.FC = () => {
 
           {/* Row 1 */}
 
+          <ChartContainer title="Academic Impact" icon1={<BookOpen size={18} />}>
+            <div className="h-[300px]">
+              <PieChart data={academicPieData} colours={['#f76868ff', '#10b981']} />
+            </div>
+          </ChartContainer>
+          <ChartContainer title="Usage by Age Trend" icon1={<Users size={18} />}>
+            <div className="h-[300px]">
+              <LineChart data={ageUsageChartData} xLabel="Age" yLabel="Avg Usage (hours)" color="#46cc73ff" />
+            </div>
+          </ChartContainer>
 
-          <ChartContainer title="Platform Popularity" icon1={<Zap size={18} />}>
+          <ChartContainer title="Platform Popularity" icon1={<FaInstagram size={18} />}>
             <div className="h-[300px]">
               <BarChart
                 data={platformChartData}
@@ -155,36 +171,25 @@ const InterestingFinds: React.FC = () => {
             </div>
           </ChartContainer>
 
-          <ChartContainer title="Usage by Age Trend" icon1={<TrendingUp size={18} />}>
-            <div className="h-[300px]">
-              <LineChart data={ageUsageChartData} xLabel="Age" yLabel="Avg Usage (hours)" color="#8b5cf6" />
+          {/* Row 2 */}
+
+          <ChartContainer title="Mental Health vs Daily Usage" icon1={<Brain size={18} />} icon2={<Clock size={18} />}>
+            <div className="h-[350px]">
+              <ScatterGraph data={mentalHealthUsageData} xLabel="Daily Usage (hours)" yLabel="Mental Health Score" color="#f59e0b" />
             </div>
           </ChartContainer>
 
-          {/* Row 2 */}
-          <ChartContainer title="Academic Impact" icon1={<BookOpen size={18} />}>
-            <div className="h-[300px]">
-              <PieChart data={academicPieData} colours={ ['#f76868ff', '#10b981'] } />
-            </div>
-          </ChartContainer>
-
-          {/* Row 2 */}
-          <div className="lg:col-span-2">
-            <ChartContainer title="Mental Health vs Daily Usage" icon1={<Brain size={18} />} icon2={<Clock size={18} />}>
-              <div className="h-[350px]">
-                <ScatterGraph data={mentalHealthUsageData} xLabel="Daily Usage (hours)" yLabel="Mental Health Score" color="#ef4444" />
-              </div>
-            </ChartContainer>
-          </div>
-
-          {/* Row 3 */}
           <ChartContainer title="Sleep vs Addiction" icon1={<Bed size={18} />} icon2={<Activity size={18} />}>
-            <div className="h-[300px]">
+            <div className="h-[350px]">
               <ScatterGraph data={sleepAddictionData} xLabel="Sleep (hours)" yLabel="Addiction Score" color="#6366f1" />
             </div>
           </ChartContainer>
 
-
+          <ChartContainer title="Sleep vs Addiction" icon1={<Bed size={18} />} icon2={<Activity size={18} />}>
+            <div className="h-[350px]">
+              <ScatterGraph data={sleepAddictionData} xLabel="Sleep (hours)" yLabel="Addiction Score" color="#6366f1" />
+            </div>
+          </ChartContainer>
 
 
 
