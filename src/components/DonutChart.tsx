@@ -97,11 +97,14 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, centerText, colours, colo
       .attr('stroke', '#1f2937')
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
-      .on('mouseover', function(_event, d) {
+      .on('mouseenter', function(_event, d) {
         d3.select(this)
           .transition()
           .duration(200)
           .attr('d', arcHover(d) as string);
+        
+        // Remove any existing tooltips first
+        g.selectAll('.tooltip').remove();
         
         // Show tooltip
         const [x, y] = arcHover.centroid(d);
@@ -109,7 +112,8 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, centerText, colours, colo
         
         g.append('g')
           .attr('class', 'tooltip')
-          .attr('transform', `translate(${x},${y})`);
+          .attr('transform', `translate(${x},${y})`)
+          .style('pointer-events', 'none');
         
         const tooltip = g.select('.tooltip');
         
@@ -133,7 +137,7 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, centerText, colours, colo
           .attr('font-weight', 'bold')
           .text(`${percentage}%`);
       })
-      .on('mouseout', function(_event, d) {
+      .on('mouseleave', function(_event, d) {
         d3.select(this)
           .transition()
           .duration(200)

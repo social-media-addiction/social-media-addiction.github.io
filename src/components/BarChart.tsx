@@ -262,11 +262,14 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
 
     // Add hover events to all bars
     g.selectAll<SVGRectElement, BarChartData>('.bar')
-      .on('mouseover', function(_event, d) {
+      .on('mouseenter', function(_event, d) {
         d3.select(this)
           .transition()
           .duration(200)
           .attr('opacity', 0.8);
+        
+        // Remove any existing tooltips first
+        g.selectAll('.tooltip').remove();
         
         // Show tooltip
         const barX = orientation === 'vertical' 
@@ -278,7 +281,8 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
         
         g.append('g')
           .attr('class', 'tooltip')
-          .attr('transform', `translate(${barX},${barY})`);
+          .attr('transform', `translate(${barX},${barY})`)
+          .style('pointer-events', 'none');
         
         const tooltip = g.select('.tooltip');
         
@@ -302,7 +306,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
           .attr('font-weight', 'bold')
           .text(d.value.toFixed(1));
       })
-      .on('mouseout', function() {
+      .on('mouseleave', function() {
         d3.select(this)
           .transition()
           .duration(200)
