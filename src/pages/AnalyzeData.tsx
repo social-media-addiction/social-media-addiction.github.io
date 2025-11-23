@@ -9,10 +9,11 @@ import LineChart, { LineChartData } from '../components/LineChart';
 import PieChart, { PieChartData } from '../components/PieChart';
 import DonutChart, { DonutChartData } from '../components/DonutChart';
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
+import WorldMap from "../components/WorldMap";
 
 import FilterSidebar from "../components/FilterSideBar";
 
-import { Clock, GraduationCap, Users, Heart, BookOpen, Angry, Brain, Bed, ArrowDownRight } from "lucide-react";
+import { Clock, GraduationCap, Users, Heart, BookOpen, Angry, Brain, Bed, ArrowDownRight, Globe } from "lucide-react";
 import { FaInstagram, FaTwitter, FaTiktok, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
 
@@ -195,6 +196,7 @@ const AnalyzeData: React.FC = () => {
     'Academic Performance',
     'Platform Usage',
     'Relationships',
+    'Geographic',
   ];
 
   const platformIcons: Record<string, React.ReactNode> = {
@@ -452,6 +454,17 @@ const AnalyzeData: React.FC = () => {
                     </ChartContainer>
                   </div>
 
+                </div>
+              )}
+
+              {activeTab === 'Geographic' && (
+                /* Geographic Tab - Full Height Map */
+                <div className="h-[calc(100vh-12rem)]">
+                  <ChartContainer title="Geographic Distribution" icon1={<Globe size={18} />}>
+                    <div className="h-full">
+                      <WorldMap studentData={data} />
+                    </div>
+                  </ChartContainer>
                 </div>
               )}
 

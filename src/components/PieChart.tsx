@@ -52,10 +52,16 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
     const g = svg.append('g')
       .attr('transform', `translate(${width / 2},${height / 2})`);
 
-    // Color scale - vibrant colors
-    const color = d3.scaleOrdinal()
-      .domain(data.map(d => d.label))
-      .range(['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#f59e0b']);
+    // Color scale - stable colors that don't change with filters
+    const colorPalette = ['#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#f59e0b'];
+    
+    // Get all unique labels and sort them for consistency
+    const sortedLabels = data.map(d => d.label).sort();
+    
+    const color = (label: string) => {
+      const index = sortedLabels.indexOf(label);
+      return colorPalette[index % colorPalette.length];
+    };
 
     // Pie generator
     const pie = d3.pie<PieChartData>()
@@ -79,7 +85,7 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
 
     slices.append('path')
       .attr('d', arc)
-      .attr('fill', d => color(d.data.label) as string)
+      .attr('fill', d => color(d.data.label))
       .attr('stroke', '#1f2937')
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
@@ -142,7 +148,7 @@ const PieChart: React.FC<PieChartProps> = ({ data }) => {
     legendItems.append('rect')
       .attr('width', 18)
       .attr('height', 18)
-      .attr('fill', d => color(d.label) as string)
+      .attr('fill', d => color(d.label))
       .attr('rx', 3);
 
     legendItems.append('text')
