@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactElement, useState, useEffect, useMemo } from "react";
-import { Brain, Users, GraduationCap, Search, Globe, Clock4, BookOpen, Clock } from "lucide-react";
+import { Brain, Users, GraduationCap, Search, Globe, Clock4, BookOpen, Clock, ArrowLeft } from "lucide-react";
 import ChartContainer from "../components/ChartContainer";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
@@ -270,9 +270,10 @@ export default function ExploreRoom() {
 
       {/* Overlay fade (subtle background dimming) */}
       <motion.div
-        className="absolute inset-0 bg-black z-10 pointer-events-none"
+        className={`absolute inset-0 bg-black z-10 ${zoomedSpot ? 'cursor-pointer' : 'pointer-events-none'}`}
         animate={{ opacity: zoomedSpot ? 0.25 : 0.1 }}
         transition={{ duration: 0.8, ease: "easeInOut" }}
+        onClick={() => setZoomedSpot(null)}
       />
 
       {/* Info card (appears after zoom) */}
@@ -288,7 +289,14 @@ export default function ExploreRoom() {
           >
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-2xl font-bold text-teal-300">
+                <h3 className="text-2xl font-bold text-teal-300 flex items-center gap-2">
+                  <button 
+                    onClick={() => setZoomedSpot(null)}
+                    className="hover:text-teal-100 transition-colors focus:outline-none"
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft size={24} />
+                  </button>
                   {selectedSpot.label}
                 </h3>
                 <p className="text-sm text-gray-300 mt-1">{selectedSpot.info}</p>
