@@ -285,7 +285,16 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Relationship Status" icon1={<Heart size={18} />}>
                       <div className="h-[400px]">
-                        <DonutChart data={relationshipStatusData} centerText={`${data.length}`} />
+                        <DonutChart 
+                          data={relationshipStatusData} 
+                          centerText={`${data.length}`}
+                          colorMap={{
+                            'Complicated': '#8b5cf6',
+                            'In a relationship': '#ec4899',
+                            'Single': '#3b82f6',
+                            'Married': '#f97316'
+                          }}
+                        />
                       </div>
                     </ChartContainer>
                   </div>

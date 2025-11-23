@@ -3,7 +3,10 @@ import { ReactElement, useState, useEffect, useMemo } from "react";
 import { Brain, Users, GraduationCap, Search, Globe, Clock4 } from "lucide-react";
 import bgVideo from "../assets/videos/bg-small.mp4";
 import BarChart, { BarChartData } from '../components/BarChart';
-import { StudentRecord } from "../data/data";
+import SpiderChart, { SpiderChartSeries } from '../components/SpiderChart';
+
+import WorldMap from '../components/WorldMap';
+import { StudentRecord, loadStudentData } from "../data/data";
 import * as d3 from 'd3';
 
 interface Hotspot {
@@ -63,9 +66,19 @@ const hotspots: Hotspot[] = [
   }
 ];
 
-export default function HeroVideo() {
+export default function ExploreRoom() {
   const [zoomedSpot, setZoomedSpot] = useState<string | null>(null);
   const [showInfo, setShowInfo] = useState(false);
+  const [data, setData] = useState<StudentRecord[]>([]);
+  const [filters, setFilters] = useState({
+    gender: 'All',
+    ageRange: 'All',
+    academicLevel: 'All'
+  });
+
+  useEffect(() => {
+    loadStudentData('/data/dataset.csv').then(setData);
+  }, []);
 
   // Wait for zoom animation to complete before showing info card
   useEffect(() => {
@@ -78,15 +91,62 @@ export default function HeroVideo() {
   }, [zoomedSpot]);
 
   const selectedSpot = hotspots.find((s) => s.id === zoomedSpot);
-  const [barChartGrouping] = useState<keyof StudentRecord>('Academic_Level');
-  const [data] = useState<StudentRecord[]>([]);
 
+  const filteredData = useMemo(() => {
+    return data.filter(d => {
+      if (filters.gender !== 'All' && d.Gender !== filters.gender) return false;
+      if (filters.academicLevel !== 'All' && d.Academic_Level !== filters.academicLevel) return false;
+      if (filters.ageRange !== 'All') {
+        const age = d.Age;
+        if (filters.ageRange === '18-21' && (age < 18 || age > 21)) return false;
+        if (filters.ageRange === '22-25' && (age < 22 || age > 25)) return false;
+      }
+      return true;
+    });
+  }, [data, filters]);
 
-  const barChartData = useMemo((): BarChartData[] => {
-    if (data.length === 0) return [];
-    const counts = d3.rollup(data, v => v.length, d => d[barChartGrouping]);
+  // Chart Data Preparations
+  const academicData = useMemo((): BarChartData[] => {
+    if (filteredData.length === 0) return [];
+    // Compare Avg Usage for those who say it affects performance vs those who don't
+    const counts = d3.rollup(filteredData, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Affects_Academic_Performance ? "Yes" : "No");
+    return Array.from(counts, ([key, value]) => ({ label: key, value }));
+  }, [filteredData]);
+
+  const relationshipsData = useMemo((): BarChartData[] => {
+    if (filteredData.length === 0) return [];
+    // Avg Conflicts by Relationship Status
+    const counts = d3.rollup(filteredData, v => d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0, d => d.Relationship_Status);
     return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
-  }, [data, barChartGrouping]);
+  }, [filteredData]);
+
+  const mentalHealthData = useMemo((): SpiderChartSeries[] => {
+    if (filteredData.length === 0) return [];
+    
+    const avgMental = d3.mean(filteredData, d => d.Mental_Health_Score) || 0;
+    const avgAddiction = d3.mean(filteredData, d => d.Addicted_Score) || 0;
+    const avgSleep = d3.mean(filteredData, d => d.Sleep_Hours_Per_Night) || 0;
+    const avgUsage = d3.mean(filteredData, d => d.Avg_Daily_Usage_Hours) || 0;
+
+    // Normalize to roughly 0-10 scale for comparison
+    return [{
+      name: "Average Stats",
+      color: "#59cccaff",
+      data: [
+        { axis: "Mental Health", value: avgMental },
+        { axis: "Addiction (x2)", value: avgAddiction * 2 },
+        { axis: "Sleep (Hrs)", value: avgSleep },
+        { axis: "Usage (Hrs)", value: avgUsage }
+      ]
+    }];
+  }, [filteredData]);
+
+  const dailyUsageData = useMemo((): BarChartData[] => {
+    if (filteredData.length === 0) return [];
+    // Avg Usage by Platform
+    const counts = d3.rollup(filteredData, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Most_Used_Platform);
+    return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
+  }, [filteredData]);
 
   return (
     <div className="relative h-screen overflow-hidden">
@@ -186,13 +246,77 @@ export default function HeroVideo() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute bottom-40 left-1/2 transform -translate-x-1/2 w-11/12 md:w-2/3 lg:w-1/2 z-40 bg-white/10 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 md:w-2/3 lg:w-1/2 z-40 bg-white/10 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
           >
-            <h3 className="text-xl font-bold text-teal-300 mb-3">
-              {selectedSpot.label}
-            </h3>
-            <p className="text-base leading-relaxed">{selectedSpot.info}</p>
-            <BarChart data={barChartData} />
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h3 className="text-2xl font-bold text-teal-300">
+                  {selectedSpot.label}
+                </h3>
+                <p className="text-sm text-gray-300 mt-1">{selectedSpot.info}</p>
+              </div>
+              {/* Filters */}
+              <div className="flex flex-col gap-2 text-xs">
+                <select 
+                  className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-white focus:outline-none focus:border-teal-400"
+                  value={filters.gender}
+                  onChange={(e) => setFilters({...filters, gender: e.target.value})}
+                >
+                  <option value="All" className="text-black">All Genders</option>
+                  <option value="Male" className="text-black">Male</option>
+                  <option value="Female" className="text-black">Female</option>
+                  <option value="Non-binary" className="text-black">Non-binary</option>
+                </select>
+                <select 
+                  className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-white focus:outline-none focus:border-teal-400"
+                  value={filters.ageRange}
+                  onChange={(e) => setFilters({...filters, ageRange: e.target.value})}
+                >
+                  <option value="All" className="text-black">All Ages</option>
+                  <option value="18-21" className="text-black">18 - 21</option>
+                  <option value="22-25" className="text-black">22 - 25</option>
+                </select>
+                <select 
+                  className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-white focus:outline-none focus:border-teal-400"
+                  value={filters.academicLevel}
+                  onChange={(e) => setFilters({...filters, academicLevel: e.target.value})}
+                >
+                  <option value="All" className="text-black">All Levels</option>
+                  <option value="High School" className="text-black">High School</option>
+                  <option value="Undergraduate" className="text-black">Undergraduate</option>
+                  <option value="Graduate" className="text-black">Graduate</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="w-full h-64 md:h-80 relative">
+              {zoomedSpot === 'academic' && (
+                <div className="h-full w-full flex flex-col">
+                   <p className="text-xs text-center mb-2">Does Social Media Affect Academic Performance? (Avg Daily Usage Hours)</p>
+                   <BarChart data={academicData} orientation="vertical" />
+                </div>
+              )}
+              {zoomedSpot === 'relationships' && (
+                <div className="h-full w-full flex flex-col">
+                   <p className="text-xs text-center mb-2">Avg Conflicts by Relationship Status</p>
+                   <BarChart data={relationshipsData} orientation="vertical" />
+                </div>
+              )}
+              {zoomedSpot === 'mental-health' && (
+                <SpiderChart data={mentalHealthData} config={{ levels: 5 }} />
+              )}
+              {zoomedSpot === 'daily-usage' && (
+                 <div className="h-full w-full flex flex-col">
+                   <p className="text-xs text-center mb-2">Avg Daily Usage (Hours) by Platform</p>
+                   <BarChart data={dailyUsageData} orientation="vertical" />
+                </div>
+              )}
+              {zoomedSpot === 'geographics' && (
+                <div className="h-full overflow-y-auto custom-scrollbar">
+                   <WorldMap studentData={filteredData} />
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

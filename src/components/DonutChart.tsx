@@ -9,9 +9,11 @@ export interface DonutChartData {
 interface DonutChartProps {
   data: DonutChartData[];
   centerText?: string;
+  colours?: string[];
+  colorMap?: Record<string, string>; // Explicit label-to-color mapping
 }
 
-const DonutChart: React.FC<DonutChartProps> = ({ data, centerText }) => {
+const DonutChart: React.FC<DonutChartProps> = ({ data, centerText, colours, colorMap }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -55,12 +57,16 @@ const DonutChart: React.FC<DonutChartProps> = ({ data, centerText }) => {
       .attr('transform', `translate(${width / 2},${height / 2})`);
 
     // Color scale - stable colors that don't change with filters
-    const colorPalette = ['#8b5cf6', '#ec4899', '#3b82f6', '#f97316', '#14b8a6', '#f59e0b'];
-    
-    // Get all unique labels and sort them for consistency
-    const sortedLabels = data.map(d => d.label).sort();
+    const colorPalette = colours && colours.length ? colours : ['#8b5cf6', '#ec4899', '#3b82f6', '#f97316', '#14b8a6', '#f59e0b'];
     
     const color = (label: string) => {
+      // If explicit color map is provided, use it
+      if (colorMap && colorMap[label]) {
+        return colorMap[label];
+      }
+      
+      // Otherwise, use stable sorted index
+      const sortedLabels = data.map(d => d.label).sort();
       const index = sortedLabels.indexOf(label);
       return colorPalette[index % colorPalette.length];
     };

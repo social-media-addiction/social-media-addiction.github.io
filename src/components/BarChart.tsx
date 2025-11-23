@@ -300,7 +300,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
           .attr('fill', '#69b3a2')
           .attr('font-size', 16)
           .attr('font-weight', 'bold')
-          .text(d.value);
+          .text(d.value.toFixed(1));
       })
       .on('mouseout', function() {
         d3.select(this)
