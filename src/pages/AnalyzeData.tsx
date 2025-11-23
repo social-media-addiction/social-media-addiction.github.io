@@ -236,6 +236,12 @@ const AnalyzeData: React.FC = () => {
     return Array.from(avgVSMentalHealth, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [data]);
 
+  const conflictsVSDailyUsageData = useMemo((): LineChartData[] => {
+    if (data.length === 0) return [];
+    const avgVSDailyUsage = d3.rollup(data, v => d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0, d => Math.round(d.Avg_Daily_Usage_Hours));
+    return Array.from(avgVSDailyUsage, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [data]);
+
   // --- Demographics Tab Data ---
   const genderData = useMemo((): BarChartData[] => {
     if (data.length === 0) return [];
@@ -255,12 +261,12 @@ const AnalyzeData: React.FC = () => {
 
   const tabs = [
     'Demographics',
+    'Geographics',
     'Mental Health',
     'Academic Performance',
     'Platform Usage',
     'Platform Profiles',
     'Conflicts & Relationships',
-    'Geographic',
   ];
 
   const platformIcons: Record<string, React.ReactNode> = {
@@ -294,11 +300,10 @@ const AnalyzeData: React.FC = () => {
               title={tab}
               onClick={() => setActiveTab(tab)}
               aria-pressed={activeTab === tab}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 outline-none ${
-                activeTab === tab
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 outline-none ${activeTab === tab
                   ? 'bg-[#69b3a2] text-white shadow-xl shadow-[#69b3a2]/30'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
-              } cursor-pointer transform hover:-translate-y-0.5 hover:scale-105`}
+                } cursor-pointer transform hover:-translate-y-0.5 hover:scale-105`}
             >
               {tab}
             </button>
@@ -322,7 +327,7 @@ const AnalyzeData: React.FC = () => {
               {activeTab === 'Demographics' && (
                 /* Demographics Tab */
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                  
+
                   <div className="h-[480px]">
                     <ChartContainer title="Gender Distribution" icon1={<Users size={18} />}>
                       <div className="h-[400px]">
@@ -342,8 +347,8 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Relationship Status" icon1={<Heart size={18} />}>
                       <div className="h-[400px]">
-                        <DonutChart 
-                          data={relationshipStatusData} 
+                        <DonutChart
+                          data={relationshipStatusData}
                           centerText={`${data.length}`}
                           colorMap={{
                             'Complicated': '#8b5cf6',
@@ -373,8 +378,8 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px] xl:col-span-2">
                     <ChartContainer title="Most Used Platforms" icon1={<FaInstagram size={18} />}>
                       <div className="h-[400px]">
-                        <BarChart 
-                          data={platformUsageBarData} 
+                        <BarChart
+                          data={platformUsageBarData}
                           orientation="horizontal"
                           xLabel="Number of Students"
                           yLabel="Platform"
@@ -416,7 +421,7 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Overall Academic Impact" icon1={<BookOpen size={18} />}>
                       <div className="h-[400px]">
-                        <PieChart data={academicImpactData} colours={ ['#f76868ff', '#10b981'] } />
+                        <PieChart data={academicImpactData} colours={['#f76868ff', '#10b981']} />
                       </div>
                     </ChartContainer>
                   </div>
@@ -550,7 +555,7 @@ const AnalyzeData: React.FC = () => {
                       </div>
                     </ChartContainer>
                   </div>
-                  <div className="h-[480px] xl:col-span-2">
+                  <div className="h-[480px]">
                     <ChartContainer title="Conflicts VS Mental Health" icon1={<Angry size={18} />} icon2={<Brain size={18} />}>
                       <div className="h-[400px]">
                         <LineChart data={conflictsVSMentalHealthData} xLabel="Mental Health Score" yLabel="Number of Conflicts" />
@@ -558,10 +563,18 @@ const AnalyzeData: React.FC = () => {
                     </ChartContainer>
                   </div>
 
+                  <div className="h-[480px]">
+                    <ChartContainer title="Conflicts VS Daily Usage" icon1={<Angry size={18} />} icon2={<Clock size={18} />}>
+                      <div className="h-[400px]">
+                        <LineChart data={conflictsVSDailyUsageData} xLabel="Daily Usage (hours)" yLabel="Number of Conflicts" color="orange" />
+                      </div>
+                    </ChartContainer>
+                  </div>
+
                 </div>
               )}
 
-              {activeTab === 'Geographic' && (
+              {activeTab === 'Geographics' && (
                 /* Geographic Tab - Full Height Map */
                 <div className="h-[calc(100vh-12rem)]">
                   <ChartContainer title="Geographic Distribution" icon1={<Globe size={18} />}>

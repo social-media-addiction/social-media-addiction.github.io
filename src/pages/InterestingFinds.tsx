@@ -7,7 +7,7 @@ import BarChart, { BarChartData } from "../components/BarChart";
 import PieChart, { PieChartData } from "../components/PieChart";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from "../components/ScatterGraph";
-import { Brain, Clock, BookOpen, Bed, Zap, Activity, TrendingUp, Users } from "lucide-react";
+import { Brain, Clock, BookOpen, Bed, Zap, Activity, TrendingUp, Users, Angry } from "lucide-react";
 import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
 import tiktok from "../assets/tiktok.png";
@@ -78,6 +78,13 @@ const InterestingFinds: React.FC = () => {
     return ((insights.academicImpact.yes / data.length) * 100).toFixed(1);
   }, [insights]);
 
+  const conflictsVSDailyUsageData = useMemo((): LineChartData[] => {
+    if (!insights) return [];
+    return Array.from(insights.conflictsByDailyUsage.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([usage, conflicts]) => ({ x: usage, y: conflicts }));
+  }, [insights]);
+
 
   if (!data.length || !insights) {
     return (
@@ -120,6 +127,11 @@ const InterestingFinds: React.FC = () => {
             icon={<FaInstagram className="text-pink-400" size={20} />}
           />
           <MetricCard
+            title="Avg Daily Usage"
+            value={`${insights.avgUsage.toFixed(2)}h`}
+            icon={<Clock className="text-teal-400" size={20} />}
+          />
+          <MetricCard
             title="Avg Mental Health"
             value={
               <span className="flex items-baseline gap-2">
@@ -133,12 +145,6 @@ const InterestingFinds: React.FC = () => {
             title="Avg Sleep"
             value={`${insights.avgSleep.toFixed(1)}h`}
             icon={<Bed className="text-indigo-400" size={20} />}
-          />
-
-          <MetricCard
-            title="Avg Daily Usage"
-            value={`${insights.avgUsage.toFixed(2)}h`}
-            icon={<Clock className="text-teal-400" size={20} />}
           />
 
         </div>
@@ -185,9 +191,9 @@ const InterestingFinds: React.FC = () => {
             </div>
           </ChartContainer>
 
-          <ChartContainer title="Sleep vs Addiction" icon1={<Bed size={18} />} icon2={<Activity size={18} />}>
+          <ChartContainer title="Conflicts vs Daily Usage" icon1={<Angry size={18} />} icon2={<Clock size={18} />}>
             <div className="h-[350px]">
-              <ScatterGraph data={sleepAddictionData} xLabel="Sleep (hours)" yLabel="Addiction Score" color="#6366f1" />
+              <LineChart data={conflictsVSDailyUsageData} xLabel="Daily Usage (hours)" yLabel="Number of Conflicts" color="orange" />
             </div>
           </ChartContainer>
 

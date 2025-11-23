@@ -70,6 +70,7 @@ export interface Insights {
   relationshipStats: Map<string, number>;
   ageDistribution: Map<number, number>;
   conflictDistribution: Map<number, number>;
+  conflictsByDailyUsage: Map<number, number>;
 }
 
 export const loadStudentData = async (path: string): Promise<StudentRecord[]> => {
@@ -122,6 +123,7 @@ export const generateInsights = (data: StudentRecord[]): Insights => {
     },
     relationshipStats: d3.rollup(data, (v) => v.length, (d) => d.Relationship_Status),
     ageDistribution: d3.rollup(data, (v) => v.length, (d) => d.Age),
-    conflictDistribution: d3.rollup(data, (v) => v.length, (d) => d.Conflicts_Over_Social_Media)
+    conflictDistribution: d3.rollup(data, (v) => v.length, (d) => d.Conflicts_Over_Social_Media),
+    conflictsByDailyUsage: d3.rollup(data, (v) => d3.mean(v, d => d.Conflicts_Over_Social_Media) ?? 0, (d) => Math.round(d.Avg_Daily_Usage_Hours))
   };
 };

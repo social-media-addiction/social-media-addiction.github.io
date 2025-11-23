@@ -9,6 +9,7 @@ import {
   FaYoutube,
   FaLinkedin,
 } from "react-icons/fa";
+import NavbarLayout from "../components/NavbarLayout";
 
 const keyVariables = [
   { variable: "Student_ID", type: "Integer", description: "Unique respondent identifier" },
@@ -76,7 +77,7 @@ const LogoTicker = ({
 
 export default function IntroductionPage() {
   const scrollToDataset = () => {
-    const target = document.getElementById("dataset-overview");
+    const target = document.getElementById("organization");
     if (target) target.scrollIntoView({ behavior: "smooth" });
   };
 
@@ -161,17 +162,22 @@ export default function IntroductionPage() {
           </p>
 
           <button onClick={scrollToDataset} className="btn btn-neutral mt-4">
-            Explore Dataset ↓
+            Explore ↓
           </button>
         </motion.div>
 
       </section>
 
       {/* MAIN CONTENT (All components are still here) */}
-      <main className="container mx-auto px-6 py-12 space-y-16 z-10 relative">
-        <div id="dataset-overview" className="divider before:bg-gray-600 after:bg-gray-600"></div>
+      <main className="container mx-auto px-6 py-12 space-y-16 z-10 relative" id="organization">
+
         {/* DATASET OVERVIEW */}
         <section className="space-y-8">
+          <h2  className="text-4xl font-semibold text-center text-[#69b3a2]">
+            Organization
+          </h2>
+          <NavbarLayout />
+          <div id="dataset-overview" className="divider before:bg-gray-600 after:bg-gray-600"></div>
           <h2 className="text-4xl font-semibold text-center text-[#69b3a2]">
             Dataset Overview
           </h2>
@@ -231,7 +237,7 @@ export default function IntroductionPage() {
 
             </ul>
           </div>
-          <div id="dataset-overview" className="divider before:bg-gray-600 after:bg-gray-600"></div>
+          <div id="key-variables" className="divider before:bg-gray-600 after:bg-gray-600"></div>
 
           {/* KEY VARIABLES TABLE */}
           <div className="lg:col-span-3">
@@ -265,7 +271,7 @@ export default function IntroductionPage() {
           </div>
 
         </section>
-        <div id="dataset-overview" className="divider before:bg-gray-600 after:bg-gray-600"></div>
+        <div id="limitations" className="divider before:bg-gray-600 after:bg-gray-600"></div>
 
         {/* LIMITATIONS */}
         <h2 className="text-4xl font-semibold text-center text-[#69b3a2]">
