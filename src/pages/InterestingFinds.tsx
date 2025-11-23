@@ -7,7 +7,7 @@ import BarChart, { BarChartData } from "../components/BarChart";
 import PieChart, { PieChartData } from "../components/PieChart";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from "../components/ScatterGraph";
-import { Brain, Clock, BookOpen, Bed, Zap, Activity, TrendingUp, Users, Angry } from "lucide-react";
+import { Brain, Clock, BookOpen, Bed, Activity, Users, Angry } from "lucide-react";
 import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
 import tiktok from "../assets/tiktok.png";
