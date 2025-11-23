@@ -194,7 +194,6 @@ export default function ExploreRoom() {
     <div className="relative h-screen overflow-hidden">
       {/* Background video */}
       <motion.video
-        key={zoomedSpot}
         className="absolute top-0 left-0 w-full h-full object-cover"
         autoPlay
         loop
