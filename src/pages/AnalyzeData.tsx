@@ -290,9 +290,8 @@ const AnalyzeData: React.FC = () => {
                           centerText={`${data.length}`}
                           colorMap={{
                             'Complicated': '#8b5cf6',
-                            'In a relationship': '#ec4899',
-                            'Single': '#3b82f6',
-                            'Married': '#f97316'
+                            'In Relationship': '#ec4899',
+                            'Single': '#3b82f6'
                           }}
                         />
                       </div>
