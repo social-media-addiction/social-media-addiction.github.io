@@ -197,7 +197,12 @@ const AnalyzeData: React.FC = () => {
     return Array.from(avgVSAge, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [data]);
 
-
+    const platformUsageBarData = useMemo((): BarChartData[] => {
+    if (data.length === 0) return [];
+    const counts = d3.rollup(data, v => v.length, d => d.Most_Used_Platform);
+    return Array.from(counts, ([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [data]);
 
   const avgMentalHealthVSSleepData = useMemo((): LineChartData[] => {
     if (data.length === 0) return [];
