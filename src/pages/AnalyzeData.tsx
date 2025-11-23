@@ -411,7 +411,7 @@ const AnalyzeData: React.FC = () => {
                                     type="button"
                                     onClick={() => setMode('bubble')}
                                     aria-pressed={mode === 'bubble'}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition ${mode === 'bubble'
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition cursor-pointer ${mode === 'bubble'
                                       ? 'bg-[#69b3a2] text-white shadow'
                                       : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
                                   >
@@ -421,7 +421,7 @@ const AnalyzeData: React.FC = () => {
                                     type="button"
                                     onClick={() => setMode('bar')}
                                     aria-pressed={mode === 'bar'}
-                                    className={`px-3 py-1 rounded-md text-sm font-medium transition ${mode === 'bar'
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition cursor-pointer ${mode === 'bar'
                                       ? 'bg-[#69b3a2] text-white shadow'
                                       : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
                                   >

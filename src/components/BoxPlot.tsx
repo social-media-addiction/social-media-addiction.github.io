@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as d3 from 'd3';
+import { socialMediaColors } from './SocialMediaColors';
 
 export interface BoxPlotData {
   key: string;
@@ -106,7 +107,7 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax, yLabel }) => {
     // Color scale for vibrant colors
     const colorScale = d3.scaleOrdinal<string>()
             .domain(data.map((d) => d.key))
-            .range(["#dd4a6cff", "#38bdf8", "#24233bff", "#ee615aff", "#38bdf8", "#223485ff", "#d99a41ff", "#54c776ff", "#d99a41ff", "#38bdf8", "#54c776ff", "#54c776ff"]);
+            .range(Object.values(socialMediaColors));
 
     data.forEach((d) => {
       const { key, values } = d;

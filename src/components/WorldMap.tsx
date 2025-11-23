@@ -124,8 +124,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
             colorInterpolator = d3.interpolateRgb("#0f2411ff", "#baf48eff");
             break;
           case 'Count':
-            // Light purple to Dark purple
-            colorInterpolator = d3.interpolateRgb("#e9d5ff", "#581c87");
+            colorInterpolator = d3.interpolateRgb("#6084f8ff", "#3d114fff");
             break;
           default:
             colorInterpolator = d3.interpolateRgb("#521db9", "#00e8a2");
