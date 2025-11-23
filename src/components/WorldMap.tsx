@@ -7,6 +7,8 @@ import type { FeatureCollection, Geometry } from "geojson";
 interface WorldMapProps {
     studentData: StudentRecord[];
     onCountrySelect?: (country: string, value: number | undefined) => void;
+    metric?: keyof StudentRecord;
+    onMetricChange?: (metric: keyof StudentRecord) => void;
 }
 
 // Dataset (key) -> Map_Name (value)
@@ -43,14 +45,23 @@ function aggregateByCountry(data: StudentRecord[], metric: keyof StudentRecord) 
     );
 }
 
-const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect }) => {
+const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metric: externalMetric, onMetricChange }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const [metric, setMetric] = useState<keyof StudentRecord>("Addicted_Score");
+    const [internalMetric, setInternalMetric] = useState<keyof StudentRecord>("Addicted_Score");
+    const metric = externalMetric || internalMetric;
     const [countriesData, setCountriesData] = useState<FeatureCollection<Geometry, { name: string }> | null>(null);
     const [countryMeshData, setCountryMeshData] = useState<any | null>(null);
     const valuemap = aggregateByCountry(studentData, metric);
+
+    const handleMetricChange = (newMetric: keyof StudentRecord) => {
+        if (onMetricChange) {
+            onMetricChange(newMetric);
+        } else {
+            setInternalMetric(newMetric);
+        }
+    };
 
     useEffect(() => {
     async function loadMapData() {
@@ -268,7 +279,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect }) => 
                 <select
                     className="bg-gray-800 text-white p-2 rounded border border-gray-600"
                     value={metric}
-                    onChange={(e) => setMetric(e.target.value as keyof StudentRecord)}
+                    onChange={(e) => handleMetricChange(e.target.value as keyof StudentRecord)}
                 >
                     {METRIC_OPTIONS.map((m) => (
                         <option key={m.key} value={m.key}>{m.label}</option>
