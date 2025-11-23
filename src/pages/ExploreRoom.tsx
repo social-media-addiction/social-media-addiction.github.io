@@ -1,6 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactElement, useState, useEffect, useMemo } from "react";
-import { Brain, Users, GraduationCap, Search, Globe, Clock4 } from "lucide-react";
+import { Brain, Users, GraduationCap, Search, Globe, Clock4, BookOpen, Clock } from "lucide-react";
+import ChartContainer from "../components/ChartContainer";
+import LineChart, { LineChartData } from "../components/LineChart";
+import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
 import bgVideo from "../assets/videos/bg-small.mp4";
 import BarChart, { BarChartData } from '../components/BarChart';
 
@@ -75,6 +78,8 @@ export default function ExploreRoom() {
     ageRange: 'All',
     academicLevel: 'All'
   });
+  const [conflictMetric, setConflictMetric] = useState<'Mental Health' | 'Daily Usage'>('Mental Health');
+  const [academicMetric, setAcademicMetric] = useState<'Daily Usage' | 'Mental Health'>('Daily Usage');
 
   useEffect(() => {
     loadStudentData('/data/dataset.csv').then(setData);
@@ -131,6 +136,29 @@ export default function ExploreRoom() {
     return Array.from(counts, ([key, value]) => ({ label: key, value }));
   }, [filteredData]);
 
+  // New: Negative Academic Impact vs Daily Usage
+  const negativeImpactVsDailyUsageData = useMemo((): LineChartData[] => {
+    if (filteredData.length === 0) return [];
+    // Group by rounded daily usage hours and compute proportion of negative impact (Affects_Academic_Performance true)
+    const grouped = d3.rollup(
+      filteredData,
+      v => d3.mean(v, d => d.Affects_Academic_Performance ? 1 : 0) || 0,
+      d => Math.round(d.Avg_Daily_Usage_Hours)
+    );
+    return Array.from(grouped, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [filteredData]);
+
+  const negativeImpactVsMentalHealthData = useMemo((): LineChartData[] => {
+    if (filteredData.length === 0) return [];
+    // Group by mental health score and compute proportion of negative impact
+    const grouped = d3.rollup(
+      filteredData,
+      v => d3.mean(v, d => d.Affects_Academic_Performance ? 1 : 0) || 0,
+      d => d.Mental_Health_Score
+    );
+    return Array.from(grouped, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [filteredData]);
+
   const relationshipsData = useMemo((): BarChartData[] => {
     if (filteredData.length === 0) return [];
     // Avg Conflicts by Relationship Status
@@ -138,23 +166,24 @@ export default function ExploreRoom() {
     return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
   }, [filteredData]);
 
-  const mentalHealthData = useMemo((): BarChartData[] => {
+  const conflictsVsMentalHealthData = useMemo((): LineChartData[] => {
     if (filteredData.length === 0) return [];
-    
-    // Group by addiction score ranges and calculate avg mental health
-    const grouped = d3.rollup(
-      filteredData,
-      v => d3.mean(v, d => d.Mental_Health_Score) || 0,
-      d => {
-        const score = d.Addicted_Score;
-        if (score <= 1) return 'Low (0-1)';
-        if (score <= 2) return 'Medium (1-2)';
-        if (score <= 3) return 'High (2-3)';
-        return 'Very High (3+)';
-      }
-    );
-    
-    return Array.from(grouped, ([label, value]) => ({ label, value }));
+    const avgVSMentalHealth = d3.rollup(filteredData, v => d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0, d => d.Mental_Health_Score);
+    return Array.from(avgVSMentalHealth, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [filteredData]);
+
+  const conflictsVsDailyUsageData = useMemo((): LineChartData[] => {
+    if (filteredData.length === 0) return [];
+    const avgVSDailyUsage = d3.rollup(filteredData, v => d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0, d => Math.round(d.Avg_Daily_Usage_Hours));
+    return Array.from(avgVSDailyUsage, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
+  }, [filteredData]);
+
+  const mentalHealthVsUsageData = useMemo((): ScatterData[] => {
+    if (filteredData.length === 0) return [];
+    return filteredData.map(d => ({
+      x: d.Avg_Daily_Usage_Hours,
+      y: d.Mental_Health_Score
+    }));
   }, [filteredData]);
 
   const dailyUsageData = useMemo((): BarChartData[] => {
@@ -316,21 +345,62 @@ export default function ExploreRoom() {
 
             <div className="w-full h-80 md:h-[28rem] relative">
               {zoomedSpot === 'academic' && (
-                <div className="h-full w-full flex flex-col">
-                   <p className="text-xs text-center mb-2">Academic Performance VS Social Media Usage</p>
-                   <BarChart data={academicData} orientation="vertical" yLabel="Avg Daily Usage (Hours)" xLabel="Does Social Media Affect Academic Performance?" />
-                </div>
-              )}
+  <div className="h-full w-full flex flex-col relative">
+    <div className="absolute top-0 right-0 z-10">
+      <select 
+        className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
+        value={academicMetric}
+        onChange={(e) => setAcademicMetric(e.target.value as 'Daily Usage' | 'Mental Health')}
+      >
+        <option value="Daily Usage" className="text-black">vs Daily Usage</option>
+        <option value="Mental Health" className="text-black">vs Mental Health</option>
+      </select>
+    </div>
+    <p className="text-xs text-center mb-2">Negative Academic Impact vs {academicMetric}</p>
+    <div className="h-[500px]">
+      <LineChart 
+        data={academicMetric === 'Daily Usage' ? negativeImpactVsDailyUsageData : negativeImpactVsMentalHealthData} 
+        xLabel={academicMetric === 'Daily Usage' ? "Daily Usage (hours)" : "Mental Health Score"} 
+        yLabel="% Negative Impact" 
+        color={academicMetric === 'Daily Usage' ? "#f472b6" : "#fb923c"}
+      />
+    </div>
+  </div>
+)}
               {zoomedSpot === 'relationships' && (
-                <div className="h-full w-full flex flex-col">
-                   <p className="text-xs text-center mb-2">Avg Conflicts by Relationship Status</p>
-                   <BarChart data={relationshipsData} orientation="vertical" />
+                <div className="h-full w-full flex flex-col relative">
+                   <div className="absolute top-0 right-0 z-10">
+                     <select 
+                       className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
+                       value={conflictMetric}
+                       onChange={(e) => setConflictMetric(e.target.value as 'Mental Health' | 'Daily Usage')}
+                     >
+                       <option value="Mental Health" className="text-black">vs Mental Health</option>
+                       <option value="Daily Usage" className="text-black">vs Daily Usage</option>
+                     </select>
+                   </div>
+                   <p className="text-xs text-center mb-2">Conflicts vs {conflictMetric}</p>
+                   <div className="h-[500px]">
+                     <LineChart 
+                       data={conflictMetric === 'Mental Health' ? conflictsVsMentalHealthData : conflictsVsDailyUsageData} 
+                       xLabel={conflictMetric === 'Mental Health' ? "Mental Health Score" : "Daily Usage (hours)"} 
+                       yLabel="Avg Conflicts" 
+                       color={conflictMetric === 'Mental Health' ? "#f472b6" : "#fb923c"}
+                     />
+                   </div>
                 </div>
               )}
               {zoomedSpot === 'mental-health' && (
                 <div className="h-full w-full flex flex-col">
-                  <p className="text-xs text-center mb-2">Mental Health Score by Addiction Level</p>
-                  <BarChart data={mentalHealthData} orientation="vertical" yLabel="Avg Mental Health Score" xLabel="Addiction Level" />
+                  <p className="text-xs text-center mb-2">Mental Health vs Daily Usage</p>
+                  <div className="h-[500px]">
+                    <ScatterGraph 
+                      data={mentalHealthVsUsageData} 
+                      xLabel="Daily Usage (hours)" 
+                      yLabel="Mental Health Score" 
+                      color="#59cccaff"
+                    />
+                  </div>
                 </div>
               )}
               {zoomedSpot === 'daily-usage' && (
