@@ -19,7 +19,7 @@ interface BoxPlotProps {
   yLabel?: string; // Optional y-axis label
 }
 
-const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax, xLabel, yLabel }) => {
+const BoxPlot: React.FC<BoxPlotProps> = ({ data, yMax, yLabel }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });

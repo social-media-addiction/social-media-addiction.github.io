@@ -239,14 +239,14 @@ const MetricCard = ({ title, value, icon, trend, trendUp }: { title: string, val
   </div>
 );
 
-const InsightItem = ({ label, value, color }: { label: string, value: string, color: string }) => (
-  <li className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-    <div className="flex items-center gap-3">
-      <span className={`w-2 h-2 rounded-full ${color}`}></span>
-      <span className="text-gray-300">{label}</span>
-    </div>
-    <span className="font-bold text-white">{value}</span>
-  </li>
-);
+// const InsightItem = ({ label, value, color }: { label: string, value: string, color: string }) => (
+//   <li className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+//     <div className="flex items-center gap-3">
+//       <span className={`w-2 h-2 rounded-full ${color}`}></span>
+//       <span className="text-gray-300">{label}</span>
+//     </div>
+//     <span className="font-bold text-white">{value}</span>
+//   </li>
+// );
 
 export default InterestingFinds;
