@@ -345,7 +345,7 @@ export default function ExploreRoom() {
             <div className="w-full h-80 md:h-[28rem] relative">
               {zoomedSpot === 'academic' && (
   <div className="h-full w-full flex flex-col relative">
-    <div className="absolute top-0 right-0 z-10">
+    <div className="absolute top-0 left-0 z-10">
       <select 
         className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
         value={academicMetric}
@@ -368,7 +368,7 @@ export default function ExploreRoom() {
 )}
               {zoomedSpot === 'relationships' && (
                 <div className="h-full w-full flex flex-col relative">
-                   <div className="absolute top-0 right-0 z-10">
+                   <div className="absolute top-0 left-0 z-10">
                      <select 
                        className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
                        value={conflictMetric}
@@ -391,7 +391,7 @@ export default function ExploreRoom() {
               )}
               {zoomedSpot === 'mental-health' && (
                 <div className="h-full w-full flex flex-col relative">
-                  <div className="absolute top-0 right-0 z-10">
+                  <div className="absolute top-0 left-0 z-10">
                     <select 
                       className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
                       value={mentalHealthMetric}

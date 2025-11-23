@@ -7,8 +7,8 @@ import type { FeatureCollection, Geometry } from "geojson";
 interface WorldMapProps {
     studentData: StudentRecord[];
     onCountrySelect?: (country: string, value: number | undefined) => void;
-    metric?: keyof StudentRecord;
-    onMetricChange?: (metric: keyof StudentRecord) => void;
+    metric?: keyof StudentRecord | "Count";
+    onMetricChange?: (metric: keyof StudentRecord | "Count") => void;
 }
 
 // Dataset (key) -> Map_Name (value)
@@ -29,17 +29,18 @@ function getMappedCountryName(datasetCountryName: string): string {
 }
 
 const METRIC_OPTIONS = [
+    { key: "Count", label: "Number of Students" },
     { key: "Addicted_Score", label: "Addiction Score" },
     { key: "Avg_Daily_Usage_Hours", label: "Daily Usage (hours)" },
     { key: "Sleep_Hours_Per_Night", label: "Sleep (hours)" },
-    { key: "Mental_Health_Score", label: "Mental Health Score" }
+    { key: "Mental_Health_Score", label: "Mental Health Score" },
 ];
 
-function aggregateByCountry(data: StudentRecord[], metric: keyof StudentRecord) {
+function aggregateByCountry(data: StudentRecord[], metric: keyof StudentRecord | "Count") {
     return new Map(
         d3.rollup(
             data,
-            v => d3.mean(v, d => Number(d[metric])) ?? 0,
+            v => metric === "Count" ? v.length : (d3.mean(v, d => Number(d[metric as keyof StudentRecord])) ?? 0),
             d => getMappedCountryName(d.Country)
         )
     );
@@ -49,13 +50,13 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
     const svgRef = useRef<SVGSVGElement | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const [internalMetric, setInternalMetric] = useState<keyof StudentRecord>("Addicted_Score");
+    const [internalMetric, setInternalMetric] = useState<keyof StudentRecord | "Count">("Count");
     const metric = externalMetric || internalMetric;
     const [countriesData, setCountriesData] = useState<FeatureCollection<Geometry, { name: string }> | null>(null);
     const [countryMeshData, setCountryMeshData] = useState<any | null>(null);
     const valuemap = aggregateByCountry(studentData, metric);
 
-    const handleMetricChange = (newMetric: keyof StudentRecord) => {
+    const handleMetricChange = (newMetric: keyof StudentRecord | "Count") => {
         if (onMetricChange) {
             onMetricChange(newMetric);
         } else {
@@ -124,6 +125,10 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
           case 'Mental_Health_Score':
             // Dark blue (poor mental health/worse) to Light yellow (good mental health/better)
             colorInterpolator = d3.interpolateRgb("#1e3a8a", "#fef08a");
+            break;
+          case 'Count':
+            // Light purple to Dark purple
+            colorInterpolator = d3.interpolateRgb("#e9d5ff", "#581c87");
             break;
           default:
             colorInterpolator = d3.interpolateRgb("#521db9", "#00e8a2");
@@ -279,7 +284,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
                 <select
                     className="bg-gray-800 text-white p-2 rounded border border-gray-600"
                     value={metric}
-                    onChange={(e) => handleMetricChange(e.target.value as keyof StudentRecord)}
+                    onChange={(e) => handleMetricChange(e.target.value as keyof StudentRecord | "Count")}
                 >
                     {METRIC_OPTIONS.map((m) => (
                         <option key={m.key} value={m.key}>{m.label}</option>
