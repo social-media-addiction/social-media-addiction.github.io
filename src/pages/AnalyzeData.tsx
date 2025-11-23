@@ -56,7 +56,8 @@ const AnalyzeData: React.FC = () => {
   const platformByMentalHealthData = useMemo((): BarChartData[] => {
     if (data.length === 0) return [];
     const avgVSMentalHealth = d3.rollup(data, v => d3.mean(v, d => d.Mental_Health_Score)?.toFixed(2) || 0, d => d.Most_Used_Platform);
-    return Array.from(avgVSMentalHealth, ([label, value]) => ({ label, value: Number(value) }));
+    return Array.from(avgVSMentalHealth, ([label, value]) => ({ label, value: Number(value) }))
+      .sort((a, b) => b.value - a.value); // Sort high to low
   }, [data]);
 
   const usageBoxPlotData = useMemo((): BoxPlotData[] => {
