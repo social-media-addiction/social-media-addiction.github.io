@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useLayoutEffect } from "react";
 import * as d3 from "d3";
 import { renderToStaticMarkup } from "react-dom/server";
+import { socialMediaColors } from "../components/SocialMediaColors";
 
 export interface BubbleDatum {
     id: string;
@@ -12,7 +13,7 @@ interface BubbleChartProps {
     data: BubbleDatum[];
     width?: number;
     height?: number;
-    iconMap?: Record<string, React.ReactNode>; // ★ NEW
+    iconMap?: Record<string, React.ReactNode>;
 }
 
 const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap }) => {
@@ -31,15 +32,13 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
         };
 
         updateDimensions();
-
-        const observer = new ResizeObserver(updateDimensions);
-        if (containerRef.current) observer.observe(containerRef.current);
-
-        return () => observer.disconnect();
+        const obs = new ResizeObserver(updateDimensions);
+        if (containerRef.current) obs.observe(containerRef.current);
+        return () => obs.disconnect();
     }, []);
 
     useEffect(() => {
-        if (dimensions.width === 0 || dimensions.height === 0) return;
+        if (!dimensions.width || !dimensions.height) return;
 
         const width = dimensions.width;
         const height = dimensions.height;
@@ -48,22 +47,21 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
         const svg = d3.select(svgRef.current);
         svg.selectAll("*").remove();
 
-        const color = d3
-            .scaleOrdinal<string>()
-            .domain(data.map((d) => d.group || d.id))
-            .range(["#ee5975ff", "#38bdf8", "#141417ff", "#ee615aff", "#38bdf8", "#223485ff", "#d99a41ff", "#54c776ff", "#d99a41ff", "#38bdf8", "#54c776ff", "#54c776ff"]);
 
-        // PACK LAYOUT
+        const color = (id: string) =>
+            socialMediaColors[id] || "#8884d8";  // fallback
+
+
         const pack = d3.pack<BubbleDatum>()
             .size([width - margin * 2, height - margin * 2])
             .padding(5);
 
-        const rawHierarchy = d3
-            .hierarchy<{ children?: BubbleDatum[] } | BubbleDatum>({ children: data } as any)
-            .sum((d: any) => ("value" in d ? (d as BubbleDatum).value : 0));
+        const root = pack(
+            d3.hierarchy({ children: data } as any)
+                .sum((d: any) => d.value)
+        );
 
-        const root = pack(rawHierarchy as unknown as d3.HierarchyNode<BubbleDatum>);
-
+        
         const nodes = svg.append("g")
             .attr("transform", `translate(${margin}, ${margin})`)
             .selectAll("g")
@@ -72,7 +70,6 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
             .attr("transform", (d) => `translate(${d.x},${d.y})`)
             .style("cursor", "pointer");
 
-        // TOOLTIP
         const tooltip = svg.append("g")
             .attr("class", "bubble-tooltip")
             .style("display", "none");
@@ -89,11 +86,10 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
             .attr("font-weight", "bold")
             .attr("text-anchor", "middle");
 
-        // CIRCLES
         nodes.append("circle")
             .attr("r", (d) => d.r)
-            .attr("fill-opacity", 0.72)
-            .attr("fill", (d) => color(d.data.group || d.data.id) as string)
+            .attr("fill-opacity", 0.8)
+            .attr("fill", (d) => color(d.data.id))  // ★ UPDATED
             .attr("stroke", "rgba(255,255,255,0.4)")
             .attr("stroke-width", 2)
             .on("mouseover", function (_, d) {
@@ -101,8 +97,8 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
 
                 tooltip.select("text").text(`${d.data.id}: ${d.data.value}`);
 
-                const textNode = tooltip.select("text").node() as SVGTextElement;
-                const textWidth = textNode.getBBox().width;
+                const textNode = tooltip.select("text").node() as SVGGraphicsElement | null;
+                const textWidth = textNode ? textNode.getBBox().width : 60;
 
                 tooltip.select("rect")
                     .attr("width", textWidth + 16)
@@ -120,17 +116,17 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
                 tooltip.style("display", "none");
             });
 
-        // LABELS
+
         nodes.append("text")
             .attr("fill", "white")
             .attr("font-size", (d) => Math.min(d.r / 3, 16))
             .attr("text-anchor", "middle")
-            .attr("dy", "1em")
+            .attr("dy", "1.2em")
             .text((d) => d.data.id);
 
-        // -------------------------------------------------------
-        // ★ ICONS (same technique as your BarChart foreignObject)
-        // -------------------------------------------------------
+        // -----------------------------
+        // ICONS
+        // -----------------------------
         if (iconMap) {
             nodes.each(function (d) {
                 const icon = iconMap[d.data.id];
@@ -144,7 +140,7 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
                     .attr("width", d.r)
                     .attr("height", d.r)
                     .attr("x", -d.r / 2)
-                    .attr("y", -(d.r / 2) - 10) // shift slightly upward
+                    .attr("y", -d.r / 2 - 12)
                     .style("overflow", "visible")
                     .html(`
                         <div style="

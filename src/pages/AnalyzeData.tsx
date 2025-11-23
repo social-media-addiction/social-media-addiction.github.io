@@ -98,7 +98,7 @@ const AnalyzeData: React.FC = () => {
     );
 
     // Color palette to use for platform profiles
-    const colors = ['#ec59a5ff', '#90d1d6ff',  '#60a5fa', '#34d399'];
+    const colors = ['#ec59a5ff', '#90d1d6ff', '#60a5fa', '#34d399'];
 
     // Return platforms in the fixed order, assigning colors from the palette
     return topPlatformsByOriginal.map((platform, idx) => {
@@ -395,8 +395,59 @@ const AnalyzeData: React.FC = () => {
 
                   <div className="h-[490px]">
                     <ChartContainer title="Most Used Platforms" icon1={<FaInstagram size={18} />}>
-                      <div className="h-[410px]">
-                        <BubbleChart data={platformUsageBubbleData} height={435} iconMap={platformIcons} />
+                      <div className="h-[410px] flex flex-col">
+                        {(() => {
+                          const PlatformChartSwitcher: React.FC = () => {
+                            const [mode, setMode] = useState<'bubble' | 'bar'>('bubble');
+                            return (
+                              <div className="h-full flex flex-col">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => setMode('bubble')}
+                                    aria-pressed={mode === 'bubble'}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition ${mode === 'bubble'
+                                      ? 'bg-[#69b3a2] text-white shadow'
+                                      : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
+                                  >
+                                    Bubble Chart
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setMode('bar')}
+                                    aria-pressed={mode === 'bar'}
+                                    className={`px-3 py-1 rounded-md text-sm font-medium transition ${mode === 'bar'
+                                      ? 'bg-[#69b3a2] text-white shadow'
+                                      : 'text-gray-300 hover:text-white hover:bg-white/5'}`}
+                                  >
+                                    Bar Chart
+                                  </button>
+                                </div>
+
+                                <div className="flex-1 min-h-0">
+                                  {mode === 'bubble' ? (
+                                    <div className="h-full">
+                                      <BubbleChart data={platformUsageBubbleData} height={400} iconMap={platformIcons} />
+                                    </div>
+                                  ) : (
+                                    <div className="h-full">
+                                      <BarChart
+                                        data={platformUsageBarData}
+                                        orientation="horizontal"
+                                        xLabel="Number of Students"
+                                        yLabel="Platform"
+                                        iconMap={platformIcons}
+                                        isSocialMedia={true}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          };
+
+                          return <PlatformChartSwitcher />;
+                        })()}
                       </div>
                     </ChartContainer>
                   </div>
@@ -408,9 +459,10 @@ const AnalyzeData: React.FC = () => {
                         <BarChart
                           data={platformByMentalHealthData}
                           orientation="horizontal"
-                          xLabel="Platform"
-                          yLabel="Avg Mental Health Score"
+                          yLabel="Platform"
+                          xLabel="Avg Mental Health Score"
                           iconMap={platformIcons}
+                          isSocialMedia={true}
                         />
                       </div>
                     </ChartContainer>

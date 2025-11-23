@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import * as d3 from 'd3';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { socialMediaColors } from '../components/SocialMediaColors';
 
 export interface BarChartData {
   label: string;
@@ -15,9 +16,10 @@ interface BarChartProps {
   yLabel?: string;
   colours?: string[];
   iconMap?: Record<string, React.ReactNode>;
+  isSocialMedia?: boolean;
 }
 
-const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLabel, yLabel, colours, iconMap }) => {
+const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLabel, yLabel, colours, iconMap, isSocialMedia }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -48,11 +50,11 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
 
 
 
-  const margin = { 
-    top: 20, 
-    right: 20, 
-    bottom: 60, 
-    left: orientation === 'horizontal' ? 100 : 60 
+  const margin = {
+    top: 20,
+    right: 20,
+    bottom: 60,
+    left: orientation === 'horizontal' ? 100 : 60
   };
   const chartWidth = dimensions.width - margin.left - margin.right;
   const chartHeight = dimensions.height - margin.top - margin.bottom;
@@ -86,7 +88,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
     if (dimensions.width === 0 || dimensions.height === 0) return;
 
     const svg = d3.select(svgRef.current);
-    
+
     // Only create the main group once
     let g = svg.select<SVGGElement>('g.main-group');
     if (g.empty()) {
@@ -98,10 +100,31 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
       g.attr('transform', `translate(${margin.left},${margin.top})`);
     }
 
-    // Color scale for vibrant colors
-    const colorScale = d3.scaleSequential()
-      .domain([0, data.length - 1])
-      .interpolator(d3.interpolateRgb('#ec4899', '#f97316')); // Pink to Orange
+    let colorScale: (i: number, label?: string) => string;
+
+    if (colours && colours.length >= data.length) {
+      // Override color scale with provided colours by changing the interpolator
+      colorScale = d3.scaleSequential()
+        .domain([0, colours.length - 1])
+        .interpolator((t: number) => {
+          const idx = Math.round(t * (colours.length - 1));
+          return colours[Math.max(0, Math.min(colours.length - 1, idx))];
+        });
+    }
+
+    else {
+
+      if (isSocialMedia) {
+        colorScale = (_i, label) =>
+          socialMediaColors[label!] || "#888"; // fallback
+      } else {
+        const seq = d3.scaleSequential()
+          .domain([0, data.length - 1])
+          .interpolator(d3.interpolateRgb('#ec4899', '#f97316'));
+
+        colorScale = (i) => seq(i);
+      }
+    }
 
     // Update or create axes
     if (orientation === 'vertical') {
@@ -173,14 +196,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
         .text(yLabel);
     }
 
-    if (colours && colours.length >= data.length) {
-      // Override color scale with provided colours by changing the interpolator
-      colorScale.domain([0, colours.length - 1]);
-      colorScale.interpolator((t: number) => {
-        const idx = Math.round(t * (colours.length - 1));
-        return colours[Math.max(0, Math.min(colours.length - 1, idx))];
-      });
-    }
+
 
     // Bars with animations
     const bars = g.selectAll<SVGRectElement, BarChartData>('.bar')
@@ -202,7 +218,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
       .attr('y', d => orientation === 'vertical' ? chartHeight : (yScale as d3.ScaleBand<string>)(d.label)!)
       .attr('width', _d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : 0)
       .attr('height', 0)
-      .style('fill', (_d, i) => colorScale(i))
+      .style('fill', (d, i) => colorScale(i, d.label))
       .attr('stroke', '#1f2937')
       .attr('stroke-width', 1)
       .attr('opacity', 0)
@@ -236,7 +252,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
         .style('overflow', 'visible');
 
       icons.merge(iconsEnter)
-        .each(function(d) {
+        .each(function (d) {
           if (iconMap[d.label]) {
             const iconMarkup = renderToStaticMarkup(iconMap[d.label] as React.ReactElement);
             d3.select(this).html(`<div style="display:flex;justify-content:center;align-items:center;width:100%;height:100%;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3));">${iconMarkup}</div>`);
@@ -262,30 +278,30 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
 
     // Add hover events to all bars
     g.selectAll<SVGRectElement, BarChartData>('.bar')
-      .on('mouseenter', function(_event, d) {
+      .on('mouseenter', function (_event, d) {
         d3.select(this)
           .transition()
           .duration(200)
           .attr('opacity', 0.8);
-        
+
         // Remove any existing tooltips first
         g.selectAll('.tooltip').remove();
-        
+
         // Show tooltip
-        const barX = orientation === 'vertical' 
+        const barX = orientation === 'vertical'
           ? (xScale as d3.ScaleBand<string>)(d.label)! + (xScale as d3.ScaleBand<string>).bandwidth() / 2
           : (xScale as d3.ScaleLinear<number, number>)(d.value);
-        const barY = orientation === 'vertical' 
+        const barY = orientation === 'vertical'
           ? (yScale as d3.ScaleLinear<number, number>)(d.value) - 10
           : (yScale as d3.ScaleBand<string>)(d.label)! + (yScale as d3.ScaleBand<string>).bandwidth() / 2;
-        
+
         g.append('g')
           .attr('class', 'tooltip')
           .attr('transform', `translate(${barX},${barY})`)
           .style('pointer-events', 'none');
-        
+
         const tooltip = g.select('.tooltip');
-        
+
         // Background
         tooltip.append('rect')
           .attr('x', -30)
@@ -296,7 +312,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
           .attr('fill', 'rgba(31, 41, 55, 0.95)')
           .attr('stroke', '#69b3a2')
           .attr('stroke-width', 2);
-        
+
         // Value
         tooltip.append('text')
           .attr('text-anchor', 'middle')
@@ -306,12 +322,12 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
           .attr('font-weight', 'bold')
           .text(d.value.toFixed(1));
       })
-      .on('mouseleave', function() {
+      .on('mouseleave', function () {
         d3.select(this)
           .transition()
           .duration(200)
           .attr('opacity', 1);
-        
+
         // Remove tooltip
         g.selectAll('.tooltip').remove();
       });

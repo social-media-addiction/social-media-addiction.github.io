@@ -112,20 +112,16 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
         let colorInterpolator;
         switch(metric) {
           case 'Addicted_Score':
-            // Light teal (lower addiction/better) to Dark orange (high addiction/worse)
-            colorInterpolator = d3.interpolateRgb("#5eead4", "#c2410c");
+            colorInterpolator = d3.interpolateRgb("#f5ee6fff", "#ab4663ff");
             break;
           case 'Avg_Daily_Usage_Hours':
-            // Light blue (low usage) to Dark blue (high usage)
-            colorInterpolator = d3.interpolateRgb("#bfdbfe", "#1e3a8a");
+            colorInterpolator = d3.interpolateRgb("#49ffffff", "#12265bff");
             break;
           case 'Sleep_Hours_Per_Night':
-            // Dark purple (less sleep) to Light cyan (more sleep)
-            colorInterpolator = d3.interpolateRgb("#7c3aed", "#67e8f9");
+            colorInterpolator = d3.interpolateRgb("#470b53ff", "#bd95f5ff");
             break;
           case 'Mental_Health_Score':
-            // Dark blue (poor mental health/worse) to Light yellow (good mental health/better)
-            colorInterpolator = d3.interpolateRgb("#1e3a8a", "#fef08a");
+            colorInterpolator = d3.interpolateRgb("#0f2411ff", "#baf48eff");
             break;
           case 'Count':
             // Light purple to Dark purple
