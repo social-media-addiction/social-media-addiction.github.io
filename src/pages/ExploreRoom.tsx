@@ -301,7 +301,7 @@ export default function ExploreRoom() {
                 <p className="text-sm text-gray-300 mt-1">{selectedSpot.info}</p>
               </div>
               {/* Filters */}
-              <div className="flex flex-col gap-2 text-xs">
+              <div className="flex flex-col gap-2 text-xs min-w-[200px]">
                 <select 
                   className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-white focus:outline-none focus:border-teal-400"
                   value={filters.gender}
