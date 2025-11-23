@@ -96,7 +96,7 @@ const BubbleChart: React.FC<BubbleChartProps> = ({ data, width, height, iconMap 
             .attr("fill", (d) => color(d.data.group || d.data.id) as string)
             .attr("stroke", "rgba(255,255,255,0.4)")
             .attr("stroke-width", 2)
-            .on("mouseover", function (event, d) {
+            .on("mouseover", function (_, d) {
                 d3.select(this).transition().duration(200).attr("opacity", 0.8);
 
                 tooltip.select("text").text(`${d.data.id}: ${d.data.value}`);

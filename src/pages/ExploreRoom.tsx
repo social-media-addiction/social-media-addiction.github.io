@@ -1,11 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { ReactElement, useState, useEffect, useMemo } from "react";
-import { Brain, Users, GraduationCap, Search, Globe, Clock4, BookOpen, Clock, ArrowLeft } from "lucide-react";
-import ChartContainer from "../components/ChartContainer";
+import { Brain, Users, GraduationCap, Search, Globe, ArrowLeft } from "lucide-react";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
 import bgVideo from "../assets/videos/bg-small.mp4";
-import BarChart, { BarChartData } from '../components/BarChart';
+
 
 import WorldMap from '../components/WorldMap';
 import { StudentRecord, loadStudentData } from "../data/data";
@@ -122,12 +121,7 @@ export default function ExploreRoom() {
   }, [data, filters]);
 
   // Chart Data Preparations
-  const academicData = useMemo((): BarChartData[] => {
-    if (filteredData.length === 0) return [];
-    // Compare Avg Usage for those who say it affects performance vs those who don't
-    const counts = d3.rollup(filteredData, v => d3.mean(v, d => d.Avg_Daily_Usage_Hours) || 0, d => d.Affects_Academic_Performance ? "Yes" : "No");
-    return Array.from(counts, ([key, value]) => ({ label: key, value }));
-  }, [filteredData]);
+
 
   // New: Negative Academic Impact vs Daily Usage
   const negativeImpactVsDailyUsageData = useMemo((): LineChartData[] => {
@@ -152,12 +146,7 @@ export default function ExploreRoom() {
     return Array.from(grouped, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [filteredData]);
 
-  const relationshipsData = useMemo((): BarChartData[] => {
-    if (filteredData.length === 0) return [];
-    // Avg Conflicts by Relationship Status
-    const counts = d3.rollup(filteredData, v => d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0, d => d.Relationship_Status);
-    return Array.from(counts, ([key, value]) => ({ label: String(key), value }));
-  }, [filteredData]);
+
 
   const conflictsVsMentalHealthData = useMemo((): LineChartData[] => {
     if (filteredData.length === 0) return [];

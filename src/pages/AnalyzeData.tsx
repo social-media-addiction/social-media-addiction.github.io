@@ -45,13 +45,6 @@ const AnalyzeData: React.FC = () => {
   //   return Array.from(counts, ([label, value]) => ({ label, value }));
   // }, [data]);
 
-  const platformUsageBarData = useMemo((): BarChartData[] => {
-    if (data.length === 0) return [];
-    const counts = d3.rollup(data, v => v.length, d => d.Most_Used_Platform);
-    return Array.from(counts, ([label, value]) => ({ label, value }))
-      .sort((a, b) => b.value - a.value);
-  }, [data]);
-
 
 
   const platformByMentalHealthData = useMemo((): BarChartData[] => {
