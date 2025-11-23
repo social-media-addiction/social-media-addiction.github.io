@@ -164,7 +164,7 @@ const InterestingFinds: React.FC = () => {
           {/* Row 2 */}
           <ChartContainer title="Academic Impact" icon1={<BookOpen size={18} />}>
             <div className="h-[300px]">
-              <PieChart data={academicPieData} colours={ ['#e25b5bff', '#10b981'] } />
+              <PieChart data={academicPieData} colours={ ['#f76868ff', '#10b981'] } />
             </div>
           </ChartContainer>
 
