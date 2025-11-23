@@ -94,7 +94,31 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect }) => 
         const [minVal, maxVal] = d3.extent(values) as [number, number];
 
         const colorDomain = [minVal ?? 0, maxVal ?? 1];
-        const color = d3.scaleSequential(colorDomain, d3.interpolateRgb("#521db9", "#00e8a2"));
+        
+        // Define color schemes based on metric
+        let colorInterpolator;
+        switch(metric) {
+          case 'Addicted_Score':
+            // Light teal (lower addiction/better) to Dark orange (high addiction/worse)
+            colorInterpolator = d3.interpolateRgb("#5eead4", "#c2410c");
+            break;
+          case 'Avg_Daily_Usage_Hours':
+            // Light blue (low usage) to Dark blue (high usage)
+            colorInterpolator = d3.interpolateRgb("#bfdbfe", "#1e3a8a");
+            break;
+          case 'Sleep_Hours_Per_Night':
+            // Dark purple (less sleep) to Light cyan (more sleep)
+            colorInterpolator = d3.interpolateRgb("#7c3aed", "#67e8f9");
+            break;
+          case 'Mental_Health_Score':
+            // Dark blue (poor mental health/worse) to Light yellow (good mental health/better)
+            colorInterpolator = d3.interpolateRgb("#1e3a8a", "#fef08a");
+            break;
+          default:
+            colorInterpolator = d3.interpolateRgb("#521db9", "#00e8a2");
+        }
+        
+        const color = d3.scaleSequential(colorDomain, colorInterpolator);
 
         const projection = d3.geoEqualEarth().fitExtent([[2, marginTop + 2], [width - 2, height]], { type: "Sphere" });
         const path = d3.geoPath(projection);
