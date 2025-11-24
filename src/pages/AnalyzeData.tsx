@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import * as d3 from 'd3';
 import { loadStudentData, StudentRecord, filterData, FilterCriteria } from "../data/data";
 import Aurora from "../components/Aurora";
@@ -27,6 +27,10 @@ const AnalyzeData: React.FC = () => {
 
   // New State for Tabs
   const [activeTab, setActiveTab] = useState<string>('Demographics');
+
+  // State for Platform Comparison
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+  const platformsInitialized = useRef(false);
 
   useEffect(() => {
     loadStudentData("/data/dataset.csv").then((parsed: StudentRecord[]) => {
@@ -81,7 +85,7 @@ const AnalyzeData: React.FC = () => {
     );
     const topPlatformsByOriginal = Array.from(platformUsageCounts.entries())
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 4)
+      .sort((a, b) => b[1] - a[1])
       .map(([platform,]) => platform);
 
     // Calculate stats from filtered data
@@ -98,7 +102,24 @@ const AnalyzeData: React.FC = () => {
     );
 
     // Color palette to use for platform profiles
-    const colors = ['#ec59a5ff', '#90d1d6ff', '#60a5fa', '#34d399'];
+    // Color palette to use for platform profiles
+    const colors = [
+      '#ec59a5ff', // Pink
+      '#90d1d6ff', // Cyan-ish
+      '#60a5fa',   // Blue
+      '#34d399',   // Green
+      '#f472b6',   // Light Pink
+      '#a78bfa',   // Purple
+      '#fbbf24',   // Amber
+      '#f87171',   // Red
+      '#22d3ee',   // Cyan
+      '#c084fc',   // Violet
+      '#e879f9',   // Fuchsia
+      '#2dd4bf',   // Teal
+      '#f43f5e',   // Rose
+      '#818cf8',   // Indigo
+      '#a3e635',   // Lime
+    ];
 
     // Return platforms in the fixed order, assigning colors from the palette
     return topPlatformsByOriginal.map((platform, idx) => {
@@ -126,6 +147,14 @@ const AnalyzeData: React.FC = () => {
       };
     });
   }, [data, originalData]);
+
+  // Initialize selected platforms once data is available
+  useEffect(() => {
+    if (!platformsInitialized.current && platformProfiles.length > 0) {
+      setSelectedPlatforms(platformProfiles.slice(0, 3).map(p => p.platform));
+      platformsInitialized.current = true;
+    }
+  }, [platformProfiles]);
 
   const platformUsageBubbleData = useMemo((): { id: string; value: number }[] => {
     if (data.length === 0) return [];
@@ -571,21 +600,65 @@ const AnalyzeData: React.FC = () => {
 
               {activeTab === 'Platform Profiles' && (
                 /* Platform Profiles Tab */
-                <div>
-                  <div className="bg-gray-900 border border-gray-700 shadow-lg rounded-lg p-6 relative mb-2">
-                    <h3 className="text-2xl font-bold text-sky-300 inline-flex gap-2"><Users size={27} />Platform Personality Profiles</h3>
-                    <p className="text-gray-400 text-sm mt-2"><b>Higher values =</b> More problematic in that area</p>
+                <div className="flex flex-col h-full">
+                  <div className="bg-gray-900 border border-gray-700 shadow-lg rounded-lg p-6 relative mb-4 shrink-0">
+                    <h2 className="text-3xl font-bold mb-3 text-teal-300 inline-flex gap-2"><Users size={32} />Platform Personality Profiles</h2>
+                    <p className="text-gray-400 text-sm mt-2"><b>Higher values =</b> More problematic in that area. Select platforms below to compare.</p>
+                    
+                    {/* Platform Selector / Legend */}
+                    <div className="flex flex-wrap gap-3 mt-4">
+                      {platformProfiles.map((profile) => {
+                        const isSelected = selectedPlatforms.includes(profile.platform);
+                        const color = profile.data[0].color;
+                        return (
+                          <button
+                            key={profile.platform}
+                            onClick={() => {
+                              setSelectedPlatforms(prev => 
+                                isSelected ? prev.filter(p => p !== profile.platform) : [...prev, profile.platform]
+                              );
+                            }}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 outline-none ${
+                              isSelected 
+                                ? 'bg-gray-800 border-transparent ring-1 ring-white/20' 
+                                : 'bg-transparent border-gray-600 text-gray-500 hover:border-gray-400'
+                            }`}
+                            style={{ 
+                              boxShadow: isSelected ? `0 0 10px ${color}40` : 'none'
+                            }}
+                          >
+                            <div 
+                              className={`w-3 h-3 rounded-full shadow-sm`}
+                              style={{ backgroundColor: isSelected ? color : '#6b7280' }}
+                            />
+                            <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-400'}`}>
+                              {profile.platform}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {platformProfiles.map(({ platform, data: profileData }) => (
-                      <div key={platform} className="h-[420px]">
-                        <ChartContainer title={platform} icon1={platformIcons[platform] as React.ReactElement}>
-                          <div className="h-[340px]">
-                            <SpiderChart data={profileData} config={{ levels: 5, maxValue: 5 }} />
-                          </div>
-                        </ChartContainer>
-                      </div>
-                    ))}
+
+                  <div className="h-[600px]">
+                     <ChartContainer title="Platform Comparison" icon1={<Users size={18} />}>
+                        <div className="h-[500px] w-full p-4">
+                           <SpiderChart 
+                             data={platformProfiles
+                               .filter(p => selectedPlatforms.includes(p.platform))
+                               .flatMap(p => p.data)
+                             } 
+                             config={{ 
+                               levels: 5, 
+                               maxValue: 5, 
+                               opacityArea: 0.1, 
+                               strokeWidth: 3,
+                               wrapWidth: 100,
+                               margin: { top: 110, right: 110, bottom: 110, left: 110 } 
+                             }} 
+                           />
+                        </div>
+                     </ChartContainer>
                   </div>
                 </div>
               )}

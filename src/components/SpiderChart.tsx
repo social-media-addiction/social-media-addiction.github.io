@@ -71,7 +71,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
     maxValue: 100, // Default max value if not explicitly set
     levels: 5,
     labelFactor: 1.25,
-    wrapWidth: 60,
+    wrapWidth: 100,
     opacityArea: 0.35,
     dotRadius: 4,
     opacityDots: 0.8,
@@ -97,9 +97,14 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
   } = finalConfig;
 
   useEffect(() => {
-    if (dimensions.width === 0 || dimensions.height === 0 || !data || data.length === 0) return;
+    if (dimensions.width === 0 || dimensions.height === 0) return;
 
-    const allAxes = data[0].data.map(d => d.axis);
+    const svg = d3.select(svgRef.current);
+    svg.selectAll('*').remove(); // Clear SVG on re-render
+
+    // Default axes if no data is present
+    const defaultAxes = ["Addiction", "Sleep Loss", "Conflicts", "Academic Impact", "Mental Damage"];
+    const allAxes = (data && data.length > 0) ? data[0].data.map(d => d.axis) : defaultAxes;
     const numAxes = allAxes.length;
 
     // Calculate dynamic radius based on available space
@@ -115,11 +120,11 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
       .domain([0, dynamicMaxValue])
       .range([0, radius]);
 
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove(); // Clear SVG on re-render
+    // const svg = d3.select(svgRef.current);
+    // svg.selectAll('*').remove(); // Clear SVG on re-render
 
     const g = svg.append('g')
-      .attr('transform', `translate(${dimensions.width / 2},${dimensions.height / 2})`); // Center the chart
+      .attr('transform', `translate(${dimensions.width / 2},${dimensions.height / 2 - 20})`); // Center the chart and move up slightly
 
     // --- Draw the Radar Grid (Concentric Circles/Polygons) ---
     // Create the circle axes (lines radiating from the center)
@@ -170,78 +175,107 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
     // Append the labels for each axis
     axis.append('text')
       .attr('class', 'legend')
-      .style('font-size', '12px')
-      .attr('text-anchor', 'middle')
-      .attr('dy', '0.35em')
-      .attr('x', (_d, i) => rScale(dynamicMaxValue * labelFactor) * Math.cos(angle(i) - Math.PI / 2)) // Adjusted angle
-      .attr('y', (_d, i) => rScale(dynamicMaxValue * labelFactor) * Math.sin(angle(i) - Math.PI / 2)) // Adjusted angle
+      .style('font-size', '11px')
       .attr('fill', 'white')
+      .attr('x', (_d, i) => {
+        const x = rScale(dynamicMaxValue * labelFactor) * Math.cos(angle(i));
+        return x;
+      })
+      .attr('y', (_d, i) => {
+        const y = rScale(dynamicMaxValue * labelFactor) * Math.sin(angle(i));
+        return y;
+      })
+      .attr('text-anchor', (_d, i) => {
+        const x = rScale(dynamicMaxValue * labelFactor) * Math.cos(angle(i));
+        if (Math.abs(x) < 5) return 'middle';
+        return x > 0 ? 'start' : 'end';
+      })
       .text(d => d)
-      .call(wrap, wrapWidth); // Apply text wrapping
+      .call(wrap, wrapWidth); 
 
     // --- Draw the Radar Areas and Dots ---
-    const radarLine = d3.lineRadial<SpiderChartDataItem>()
-      .curve(d3.curveCardinalClosed)
-      .radius(d => rScale(d.value))
-      .angle((_d, i) => angle(i));
+    // const radarLine = d3.lineRadial<SpiderChartDataItem>()
+    //   .curve(d3.curveCardinalClosed)
+    //   .radius(d => rScale(d.value))
+    //   .angle((_d, i) => angle(i) + Math.PI / 2); 
 
-    if (roundStrokes) {
-      (radarLine as any).curve(d3.curveCardinalClosed);
+    const radarLineGenerator = d3.lineRadial<SpiderChartDataItem>()
+        .curve(roundStrokes ? d3.curveCardinalClosed : d3.curveLinearClosed)
+        .radius(d => rScale(d.value))
+        .angle((_d, i) => angle(i) + Math.PI / 2);
+
+    if (data && data.length > 0) {
+      const blobWrapper = g.selectAll('.radarWrapper')
+        .data(data)
+        .enter().append('g')
+        .attr('class', 'radarWrapper');
+
+      // Append the polygons (areas)
+      blobWrapper.append('path')
+        .attr('class', 'radarArea')
+        .attr('d', d => radarLineGenerator(d.data))
+        .style('fill', (d, i) => d.color || colorScale(d.name || i.toString()))
+        .style('fill-opacity', opacityArea)
+        .style('pointer-events', 'none');
+
+      // Append the outlines
+      blobWrapper.append('path')
+        .attr('class', 'radarStroke')
+        .attr('d', d => radarLineGenerator(d.data))
+        .style('stroke-width', strokeWidth + 'px')
+        .style('stroke', (d, i) => d.color || colorScale(d.name || i.toString()))
+        .style('fill', 'none')
+        .style('filter', 'url(#glow)')
+        .style('cursor', 'pointer')
+        .on('mouseover', function() {
+          // Select the parent wrapper group
+          const parentWrapper = d3.select(this.parentNode as Element);
+          
+          // Bring parent wrapper to front
+          parentWrapper.raise();
+          
+          // Dim all other wrappers
+          g.selectAll('.radarWrapper')
+            .transition().duration(200)
+            .style('opacity', 0.1);
+            
+          // Highlight this wrapper
+          parentWrapper
+            .transition().duration(200)
+            .style('opacity', 1);
+            
+          // Optional: Make area more opaque
+          parentWrapper.select('.radarArea')
+            .transition().duration(200)
+            .style('fill-opacity', 0.7);
+        })
+        .on('mouseout', function() {
+          // Restore all wrappers
+          g.selectAll('.radarWrapper')
+            .transition().duration(200)
+            .style('opacity', 1);
+            
+          // Restore area opacity
+          g.selectAll('.radarArea')
+            .transition().duration(200)
+            .style('fill-opacity', opacityArea);
+        });
+
+      // Append the dots
+      blobWrapper.selectAll('.radarCircle')
+        .data(d => d.data)
+        .enter().append('circle')
+        .attr('class', 'radarCircle')
+        .attr('r', dotRadius)
+        .attr('cx', (_d, i) => rScale(_d.value) * Math.cos(angle(i)))
+        .attr('cy', (_d, i) => rScale(_d.value) * Math.sin(angle(i)))
+        .style('fill', function(this: SVGElement) {
+           // Access the parent data to get the color
+           const parentData = d3.select(this.parentNode as Element).datum() as SpiderChartSeries;
+           return parentData.color || colorScale(parentData.name);
+        })
+        .style('fill-opacity', opacityDots);
     }
-
-    const blobWrapper = g.selectAll('.radarWrapper')
-      .data(data)
-      .enter().append('g')
-      .attr('class', 'radarWrapper');
-
-    // Append the polygons (areas)
-    blobWrapper.append('path')
-      .attr('class', 'radarArea')
-      .attr('d', d => radarLine(d.data))
-      .style('fill', (d, i) => d.color || colorScale(d.name || i.toString()))
-      .style('fill-opacity', opacityArea)
-      .on('mouseover', function() {
-        // Bring to front
-        d3.select(this).raise();
-        // Dim all other areas
-        g.selectAll('.radarArea')
-          .transition().duration(200)
-          .style('fill-opacity', 0.1);
-        // Highlight the hovered area
-        d3.select(this)
-          .transition().duration(200)
-          .style('fill-opacity', 0.7);
-      })
-      .on('mouseout', function() {
-        // Restore all areas
-        g.selectAll('.radarArea')
-          .transition().duration(200)
-          .style('fill-opacity', opacityArea);
-      });
-
-    // Append the outlines
-    blobWrapper.append('path')
-      .attr('class', 'radarStroke')
-      .attr('d', d => radarLine(d.data))
-      .style('stroke-width', strokeWidth + 'px')
-      .style('stroke', (d, i) => d.color || colorScale(d.name || i.toString()))
-      .style('fill', 'none')
-      .style('filter', 'url(#glow)'); // Optional: add a glow effect
-
-    // Append the dots
-    blobWrapper.selectAll('.radarCircle')
-      .data(d => d.data)
-      .enter().append('circle')
-      .attr('class', 'radarCircle')
-      .attr('r', dotRadius)
-      .attr('cx', (_d, i) => rScale(_d.value) * Math.cos(angle(i)))
-      .attr('cy', (_d, i) => rScale(_d.value) * Math.sin(angle(i)))
-      .style('fill', (_d, i, nodes) => {
-        const parentIndex = (nodes[i] as SVGElement).parentNode ? d3.select((nodes[i] as SVGElement).parentNode as HTMLElement).datum() as SpiderChartSeries : undefined;
-        return parentIndex?.color || colorScale(parentIndex?.name || i.toString());
-      })
-      .style('fill-opacity', opacityDots);
-      // Optional: Add dot tooltips here if desired
 
     // --- Helper Functions ---
     // Function to calculate the angle for each axis
