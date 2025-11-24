@@ -463,7 +463,15 @@ const AnalyzeData: React.FC = () => {
                   <div className="h-[480px]">
                     <ChartContainer title="Gender Distribution" icon1={<Users size={18} />}>
                       <div className="h-[400px]">
-                        <BarChart data={genderData} xLabel="Gender" yLabel="Number of Students" colours={['#2688a6ff', '#e4694eff']} />
+                        <BarChart 
+                          data={genderData} 
+                          xLabel="Gender" 
+                          yLabel="Number of Students" 
+                          colorMap={{
+                            'Male': '#2688a6ff',
+                            'Female': '#e4694eff'
+                          }} 
+                        />
                       </div>
                     </ChartContainer>
                   </div>

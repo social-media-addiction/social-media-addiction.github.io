@@ -17,9 +17,10 @@ interface BarChartProps {
   colours?: string[];
   iconMap?: Record<string, React.ReactNode>;
   isSocialMedia?: boolean;
+  colorMap?: Record<string, string>;
 }
 
-const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLabel, yLabel, colours, iconMap, isSocialMedia }) => {
+const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLabel, yLabel, colours, iconMap, isSocialMedia, colorMap }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -102,7 +103,10 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
 
     let colorScale: (i: number, label?: string) => string;
 
-    if (colours && colours.length > 0) {
+    // Priority: colorMap > colours > isSocialMedia > default
+    if (colorMap) {
+      colorScale = (_i, label) => colorMap[label!] || '#888';
+    } else if (colours && colours.length > 0) {
       if (colours.length === 1) {
         colorScale = () => colours[0];
       } else {
@@ -126,20 +130,15 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
              colorScale = (i) => linearScale(i);
         }
       }
-    }
+    } else if (isSocialMedia) {
+      colorScale = (_i, label) =>
+        socialMediaColors[label!] || "#888"; // fallback
+    } else {
+      const seq = d3.scaleSequential()
+        .domain([0, data.length - 1])
+        .interpolator(d3.interpolateRgb('#ec4899', '#f97316'));
 
-    else {
-
-      if (isSocialMedia) {
-        colorScale = (_i, label) =>
-          socialMediaColors[label!] || "#888"; // fallback
-      } else {
-        const seq = d3.scaleSequential()
-          .domain([0, data.length - 1])
-          .interpolator(d3.interpolateRgb('#ec4899', '#f97316'));
-
-        colorScale = (i) => seq(i);
-      }
+      colorScale = (i) => seq(i);
     }
 
     // Update or create axes

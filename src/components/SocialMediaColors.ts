@@ -12,3 +12,4 @@ export const socialMediaColors: Record<string, string> = {
   WhatsApp: "#54c776ff",
   WeChat: "#54c776ff",
 };
+
