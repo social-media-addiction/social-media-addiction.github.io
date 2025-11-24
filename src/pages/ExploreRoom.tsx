@@ -210,7 +210,7 @@ export default function ExploreRoom() {
       {!zoomedSpot && (
         <div className="absolute top-5 left-5 z-20 p-4 text-left text-white drop-shadow-lg inline-block">
           <p className="text-lg font-bold text-teal-300"
-          style={{ filter: "drop-shadow(0 8px 20px rgba(0, 238, 255, 0.61))" }}>
+            style={{ filter: "drop-shadow(0 8px 20px rgba(0, 238, 255, 0.61))" }}>
             Click on an icon to explore
           </p>
         </div>
@@ -220,30 +220,30 @@ export default function ExploreRoom() {
       <AnimatePresence>
         {!zoomedSpot &&
           hotspots.map((spot) => (
-        <motion.button
-          key={spot.id}
-          className="absolute z-30 text-white hover:text-primary transition-transform text-center cursor-pointer rounded-lg"
-          style={{ top: spot.y, left: spot.x }}
-          whileHover={{ scale: 1.2}}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.4 }}
-          onClick={() => setZoomedSpot(spot.id)}
-        >
-          <div className="flex flex-col items-center space-y-1 text-shadow-[#69b3a2]/30" >
-            <span
-          className="rounded-full p-1 transition-shadow"
-          style={{ filter: "drop-shadow(0 8px 20px rgba(0, 238, 255, 1))" }}
+            <motion.button
+              key={spot.id}
+              className="absolute z-30 text-white hover:text-primary transition-transform text-center cursor-pointer rounded-lg"
+              style={{ top: spot.y, left: spot.x }}
+              whileHover={{ scale: 1.2 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: 0.4 }}
+              onClick={() => setZoomedSpot(spot.id)}
             >
-          {spot.icon}
-            </span>
-            <span className="text-sm font-semibold text-teal-300 text-shadow-[#69b3a2]/30" 
-            style={{ filter: "drop-shadow(0 8px 20px rgba(0, 238, 255, 1))" }}>
-          {spot.label}
-            </span>
-          </div>
-        </motion.button>
+              <div className="flex flex-col items-center space-y-1 text-shadow-[#69b3a2]/30" >
+                <span
+                  className="rounded-full p-1 transition-shadow"
+                  style={{ filter: "drop-shadow(0 8px 20px rgba(0, 238, 255, 1))" }}
+                >
+                  {spot.icon}
+                </span>
+                <span className="text-sm font-semibold text-teal-300 text-shadow-[#69b3a2]/30"
+                  style={{ filter: "drop-shadow(0 8px 20px rgba(0, 238, 255, 1))" }}>
+                  {spot.label}
+                </span>
+              </div>
+            </motion.button>
           ))}
       </AnimatePresence>
 
@@ -257,26 +257,27 @@ export default function ExploreRoom() {
 
       {/* Left Fixed Filter Panel */}
       <AnimatePresence>
-        {zoomedSpot && (
-          <motion.div
-            initial={{ x: -40, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -40, opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="
-        absolute top-1/2 left-18 
+  {zoomedSpot && (
+    <motion.div
+      initial={{ x: -40, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      exit={{ x: -40, opacity: 0 }}
+      transition={{ duration: 0.4 }}
+      className="
+        fixed top-1/2 left-7
         -translate-y-1/2
-        w-64 
+        w-72
+        max-h-[90vh] 
+        overflow-y-auto
         bg-gray-900/50
-        backdrop-blur-lg 
-        border border-teal-400/40 
-        text-white 
-        rounded-xl 
-        p-6 
+        backdrop-blur-lg
+        border border-teal-400/40
+        text-white
+        rounded-xl
+        p-6
         shadow-lg
-        z-50
-      "
-          >
+        z-50"
+    >
             <h3 className="text-xl font-bold text-teal-300 mb-3">Filters</h3>
 
             {/* Gender */}
@@ -351,8 +352,20 @@ export default function ExploreRoom() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-11/12 md:w-3/4 lg:w-3/5 z-40 bg-gray-900/50 backdrop-blur-md border border-teal-400/40 text-white rounded-2xl p-6 shadow-lg"
-          >
+            className="
+        absolute top-1/2 left-1/2 
+        transform -translate-x-1/2 -translate-y-1/2
+        max-w-[calc(100vw-20rem)] 
+        w-11/12 md:w-3/4 lg:w-3/5
+        z-50
+        bg-gray-900/50
+        backdrop-blur-md
+        border border-teal-400/40
+        text-white
+        rounded-2xl
+        p-6
+        shadow-lg"
+    >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-2xl font-bold text-teal-300 flex items-center gap-2">
@@ -379,8 +392,8 @@ export default function ExploreRoom() {
                       value={academicMetric}
                       onChange={(e) => setAcademicMetric(e.target.value as 'Daily Usage' | 'Mental Health')}
                     >
-                      <option value="Daily Usage" className="text-white" style={{backgroundColor: '#414053'}}>vs Daily Usage</option>
-                      <option value="Mental Health" className="text-white" style={{backgroundColor: '#414053'}}>vs Mental Health</option>
+                      <option value="Daily Usage" className="text-white" style={{ backgroundColor: '#414053' }}>vs Daily Usage</option>
+                      <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>vs Mental Health</option>
                     </select>
                   </div>
                   <p className="text-md text-center mb-2">Negative Academic Impact vs {academicMetric}</p>
@@ -390,7 +403,7 @@ export default function ExploreRoom() {
                       xLabel={academicMetric === 'Daily Usage' ? "Daily Usage (hours)" : "Mental Health Score"}
                       yLabel="% Negatively Affected"
                       color={academicMetric === 'Daily Usage' ? "#f472b6" : "#fb923c"}
-                      yDomain={[0,100]}
+                      yDomain={[0, 100]}
                     />
                   </div>
                 </div>
@@ -403,8 +416,8 @@ export default function ExploreRoom() {
                       value={conflictMetric}
                       onChange={(e) => setConflictMetric(e.target.value as 'Mental Health' | 'Daily Usage')}
                     >
-                      <option value="Mental Health" className="text-white" style={{backgroundColor: '#414053'}}>vs Mental Health</option>
-                      <option value="Daily Usage" className="text-white" style={{backgroundColor: '#414053'}}>vs Daily Usage</option>
+                      <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>vs Mental Health</option>
+                      <option value="Daily Usage" className="text-white" style={{ backgroundColor: '#414053' }}>vs Daily Usage</option>
                     </select>
                   </div>
                   <p className="text-md text-center mb-2">Conflicts vs {conflictMetric}</p>
@@ -426,8 +439,8 @@ export default function ExploreRoom() {
                       value={mentalHealthMetric}
                       onChange={(e) => setMentalHealthMetric(e.target.value as 'Mental Health' | 'Sleep Hours')}
                     >
-                      <option value="Mental Health" className="text-white" style={{backgroundColor: '#414053'}}>Mental Health</option>
-                      <option value="Sleep Hours" className="text-white" style={{backgroundColor: '#414053'}}>Sleep Hours</option>
+                      <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>Mental Health</option>
+                      <option value="Sleep Hours" className="text-white" style={{ backgroundColor: '#414053' }}>Sleep Hours</option>
                     </select>
                   </div>
                   <p className="text-md text-center mb-2">{mentalHealthMetric} vs Daily Usage</p>
@@ -450,7 +463,7 @@ export default function ExploreRoom() {
                       onChange={(e) => setMapMetric(e.target.value as keyof StudentRecord | "Count")}
                     >
                       {METRIC_OPTIONS.map((m) => (
-                        <option key={m.key} value={m.key} className="text-white" style={{backgroundColor: '#414053'}}>{m.label}</option>
+                        <option key={m.key} value={m.key} className="text-white" style={{ backgroundColor: '#414053' }}>{m.label}</option>
                       ))}
                     </select>
                   </div>
