@@ -227,7 +227,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
         .style('fill', 'none')
         .style('filter', 'url(#glow)')
         .style('cursor', 'pointer')
-        .on('mouseover', function() {
+        .on('mouseover', function(event, d) {
         // Select the parent wrapper group
         const parentWrapper = d3.select(this.parentNode as Element);
         
@@ -248,6 +248,72 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
         parentWrapper.select('.radarArea')
           .transition().duration(200)
           .style('fill-opacity', 0.7);
+        
+        // Create tooltip
+        const svgElement = svg.node();
+        if (!svgElement) return;
+        
+        const [mouseX, mouseY] = d3.pointer(event, svgElement);
+        
+        // Remove any existing tooltips
+        svg.selectAll('.spider-tooltip').remove();
+        
+        const tooltip = svg.append('g')
+          .attr('class', 'spider-tooltip')
+          .attr('transform', `translate(${mouseX + 10}, ${mouseY - 10})`)
+          .style('pointer-events', 'none');
+        
+        // Calculate tooltip dimensions based on content
+        const metrics = d.data;
+        const lineHeight = 18;
+        const padding = 12;
+        const titleHeight = 22;
+        const tooltipWidth = 180;
+        const tooltipHeight = titleHeight + (metrics.length * lineHeight) + (padding * 2);
+        
+        // Background with glassmorphism
+        tooltip.append('rect')
+          .attr('x', 0)
+          .attr('y', 0)
+          .attr('width', tooltipWidth)
+          .attr('height', tooltipHeight)
+          .attr('rx', 8)
+          .attr('fill', 'rgba(31, 41, 55, 0.95)')
+          .attr('stroke', d.color || colorScale(d.name || ''))
+          .attr('stroke-width', 2)
+          .style('filter', 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))');
+        
+        // Platform name (title)
+        tooltip.append('text')
+          .attr('x', padding)
+          .attr('y', padding + 14)
+          .attr('fill', 'white')
+          .attr('font-size', 14)
+          .attr('font-weight', 'bold')
+          .text(d.name);
+        
+        // Metric values
+        metrics.forEach((metric, i) => {
+          const yPos = padding + titleHeight + (i * lineHeight) + 12;
+          
+          // Metric name
+          tooltip.append('text')
+            .attr('x', padding)
+            .attr('y', yPos)
+            .attr('fill', '#9ca3af')
+            .attr('font-size', 11)
+            .text(`${metric.axis}:`);
+          
+          // Metric value
+          tooltip.append('text')
+            .attr('x', tooltipWidth - padding)
+            .attr('y', yPos)
+            .attr('fill', 'white')
+            .attr('font-size', 11)
+            .attr('font-weight', '600')
+            .attr('text-anchor', 'end')
+            .text(metric.value.toFixed(2));
+        });
       })
       .on('mouseout', function() {
         // Restore all wrappers
@@ -259,6 +325,9 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
         g.selectAll('.radarArea')
           .transition().duration(200)
           .style('fill-opacity', opacityArea);
+        
+        // Remove tooltip
+        svg.selectAll('.spider-tooltip').remove();
       });
 
       // Append the dots

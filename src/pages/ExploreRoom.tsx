@@ -350,7 +350,7 @@ export default function ExploreRoom() {
                 flex-1 
                 max-w-5xl 
                 w-full
-                bg-gray-900/80
+                bg-gray-800/50
                 backdrop-blur-md
                 border border-teal-400/40
                 text-white

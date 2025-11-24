@@ -753,6 +753,7 @@ const AnalyzeData: React.FC = () => {
                       >
                         <option value="Count">Student Count</option>
                         <option value="Addicted_Score">Addiction Score</option>
+                        <option value="Avg_Daily_Usage_Hours">Daily Usage</option>
                         <option value="Sleep_Hours_Per_Night">Sleep Hours</option>
                         <option value="Mental_Health_Score">Mental Health Score</option>
                       </select>
@@ -798,6 +799,7 @@ const AnalyzeData: React.FC = () => {
                               switch (mapMetric) {
                                 case 'Count': return ['#dbeafe', '#1e40af']; // Blue: Light -> Dark
                                 case 'Addicted_Score': return ['#fee2e2', '#b91c1c']; // Red: Light -> Dark
+                                case 'Avg_Daily_Usage_Hours': return ['#cffafe', '#0e7490']; // Cyan: Light -> Dark
                                 case 'Sleep_Hours_Per_Night': return ['#f3e8ff', '#7e22ce']; // Purple: Light -> Dark
                                 case 'Conflicts_Over_Social_Media': return ['#ffedd5', '#c2410c']; // Orange: Light -> Dark
                                 case 'Mental_Health_Score': return ['#dcfce7', '#15803d']; // Green: Light -> Dark
