@@ -1,9 +1,11 @@
 # Social Media Addiction Analysis Dashboard
 
-This project is an interactive data visualization dashboard to analyze the impact of social media usage on university students.
+This project is an interactive data visualization dashboard to analyze the impact of social media usage on students.
+
+## Dataset
+[Students' Social Media Addiction](https://www.kaggle.com/datasets/adilshamim8/social-media-addiction-vs-relationships)
 
 ## How to run the project
-
 
 `The website is deployed at:` [Social Media Addiction](https://social-media-addiction.github.io/)
 
@@ -19,22 +21,25 @@ This project is an interactive data visualization dashboard to analyze the impac
     npm run dev
     ```
 
+## Code
+`You can check the code for the project` [here](https://github.com/social-media-addiction/social-media-addiction.github.io)
+
 ## Features
 
 *   **Analyze Data:** A comprehensive dashboard for in-depth data exploration with extensive filtering.
-*   **Explore Room:** An immersive, cinematic experience with interactive "hotspots" for thematic visualizations.
 *   **Advanced Filtering:** Filter data by Gender, Academic Level, Age, Most Used Platform, Relationship Status, and Country.
+*   **Explore Room:** An immersive, cinematic experience with interactive "hotspots" for thematic visualizations.
 
 ## Visualizations Used
 
-*   Bar
-*   Box
-*   Bubble
-*   Donut
-*   Line
-*   Pie
-*   Scatter
-*   Spider
+*   BarChart
+*   BoxPlot
+*   BubbleChart
+*   DonutChart
+*   LineChart
+*   PieChart
+*   ScatterPlot
+*   SpiderChart
 *   World Map
 
 ## Technologies
