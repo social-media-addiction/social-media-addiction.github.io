@@ -102,14 +102,30 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
 
     let colorScale: (i: number, label?: string) => string;
 
-    if (colours && colours.length >= data.length) {
-      // Override color scale with provided colours by changing the interpolator
-      colorScale = d3.scaleSequential()
-        .domain([0, colours.length - 1])
-        .interpolator((t: number) => {
-          const idx = Math.round(t * (colours.length - 1));
-          return colours[Math.max(0, Math.min(colours.length - 1, idx))];
-        });
+    if (colours && colours.length > 0) {
+      if (colours.length === 1) {
+        colorScale = () => colours[0];
+      } else {
+        // Create a linear scale for interpolation
+        // Map the data indices [0, data.length - 1] to the color range
+
+        // Alternatively, for just 2 colors (start/end), we can just map domain [0, data.length-1] to range [start, end]
+        if (colours.length === 2) {
+             const linearScale = d3.scaleLinear<string>()
+                .domain([0, data.length - 1])
+                .range(colours as [string, string])
+                .interpolate(d3.interpolateRgb);
+             colorScale = (i) => linearScale(i);
+        } else {
+             // For more than 2 colors, we might want a different approach or just use the linear scale with ticks
+             // But for now, let's stick to the simple linear scale for 2 colors which is what we are using
+             const linearScale = d3.scaleLinear<string>()
+                .domain(colours.map((_, i) => i * (data.length - 1) / (colours.length - 1)))
+                .range(colours)
+                .interpolate(d3.interpolateRgb);
+             colorScale = (i) => linearScale(i);
+        }
+      }
     }
 
     else {
@@ -232,6 +248,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
       .attr('y', d => orientation === 'vertical' ? (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>)(d.label)!)
       .attr('width', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : (xScale as d3.ScaleLinear<number, number>)(d.value))
       .attr('height', d => orientation === 'vertical' ? chartHeight - (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>).bandwidth())
+      .style('fill', (d, i) => colorScale(i, d.label))
       .attr('opacity', 1);
 
     // Icons above bars

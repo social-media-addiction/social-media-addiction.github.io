@@ -168,6 +168,7 @@ const InterestingFinds: React.FC = () => {
           <ChartContainer title="Platform Popularity" icon1={<FaInstagram size={18} />}>
             <div className="h-[300px]">
               <BarChart
+                isSocialMedia={true}
                 data={platformChartData}
                 orientation="horizontal"
                 xLabel="Users"

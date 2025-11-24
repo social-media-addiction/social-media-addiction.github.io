@@ -262,17 +262,52 @@ const AnalyzeData: React.FC = () => {
   const yMax = useMemo(() => d3.max(data, d => d.Avg_Daily_Usage_Hours) || 0, [data]);
   const conflictsYMax = useMemo(() => d3.max(data, d => d.Conflicts_Over_Social_Media) || 0, [data]);
 
+  // Dataset (key) -> Map_Name (value)
+  const countryNameMapping = new Map<string, string>([
+      ["USA", "United States of America"],
+      ["UK", "United Kingdom"],
+      ["South Korea", "Republic of Korea"],
+      ["Bosnia", "Bosnia and Herzegovina"],
+      ["Czech Republic", "Czechia"],
+      ["UAE", "United Arab Emirates"],
+      ["Syria", "Syrian Arab Republic"],
+      ["Trinidad", "Trinidad and Tobago"],
+      ["Vatican City", "Vatican"]
+  ]);
+
+  function getMappedCountryName(datasetCountryName: string): string {
+      return countryNameMapping.get(datasetCountryName) || datasetCountryName;
+  }
+
   const mapBarChartData = useMemo((): BarChartData[] => {
     if (data.length === 0) return [];
 
     let grouped;
     if (mapMetric === "Count") {
-      grouped = d3.rollup(data, v => v.length, d => d.Country);
+      grouped = d3.rollup(data, v => v.length, d => getMappedCountryName(d.Country));
     } else {
-      grouped = d3.rollup(data, v => d3.mean(v, d => Number(d[mapMetric])) || 0, d => d.Country);
+      grouped = d3.rollup(data, v => d3.mean(v, d => Number(d[mapMetric])) || 0, d => getMappedCountryName(d.Country));
     }
 
-    const sorted = Array.from(grouped, ([label, value]) => ({ label, value }))
+    // Helper to shorten names for the bar chart axis
+    const shortenName = (name: string) => {
+      const reverseMap: Record<string, string> = {
+        "United States of America": "USA",
+        "United Kingdom": "UK",
+        "United Arab Emirates": "UAE",
+        "Syrian Arab Republic": "Syria",
+        "Bosnia and Herzegovina": "Bosnia",
+        "Czechia": "Czech Republic",
+        "Trinidad and Tobago": "Trinidad",
+        "Republic of Korea": "South Korea"
+      };
+      return reverseMap[name] || name;
+    };
+
+    const sorted = Array.from(grouped, ([longName, value]) => ({ 
+      label: shortenName(longName), 
+      value 
+    }))
       .sort((a, b) => mapSortOrder === 'Highest' ? b.value - a.value : a.value - b.value)
       .slice(0, 15);
 
@@ -759,7 +794,20 @@ const AnalyzeData: React.FC = () => {
                           data={mapBarChartData} 
                           xLabel="Country" 
                           yLabel={mapMetric === 'Count' ? 'Count' : 'Average Value'} 
-                          colours={["#59cccaff"]} 
+                          colours={(() => {
+                            const getColors = () => {
+                              switch (mapMetric) {
+                                case 'Count': return ['#dbeafe', '#1e40af']; // Blue: Light -> Dark
+                                case 'Addicted_Score': return ['#fee2e2', '#b91c1c']; // Red: Light -> Dark
+                                case 'Sleep_Hours_Per_Night': return ['#f3e8ff', '#7e22ce']; // Purple: Light -> Dark
+                                case 'Conflicts_Over_Social_Media': return ['#ffedd5', '#c2410c']; // Orange: Light -> Dark
+                                case 'Mental_Health_Score': return ['#dcfce7', '#15803d']; // Green: Light -> Dark
+                                default: return ['#59cccaff', '#2c7a7b']; // Teal: Light -> Dark
+                              }
+                            };
+                            const colors = getColors();
+                            return mapSortOrder === 'Highest' ? [...colors].reverse() : colors;
+                          })()} 
                         />
                       </div>
                     </ChartContainer>
