@@ -19,6 +19,7 @@ import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, 
 import { SiLine, SiKakaotalk } from "react-icons/si";
 import tiktok from "../assets/tiktok.png";
 import BubbleChart from "../components/BubbleChart";
+import DropdownUp from "../components/DropdownUp";
 
 const AnalyzeData: React.FC = () => {
   const [originalData, setOriginalData] = useState<StudentRecord[]>([]);
@@ -29,6 +30,7 @@ const AnalyzeData: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('Demographics');
   const [mapMetric, setMapMetric] = useState<keyof StudentRecord | "Count">("Count");
   const [mapSortOrder, setMapSortOrder] = useState<'Highest' | 'Lowest'>('Highest');
+  const [selectedPlatformForMap, setSelectedPlatformForMap] = useState<string>('');
 
   // State for Platform Comparison
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
@@ -313,6 +315,59 @@ const AnalyzeData: React.FC = () => {
 
     return sorted;
   }, [data, mapMetric, mapSortOrder]);
+
+  // Get available platforms for the platform selector
+  const availablePlatforms = useMemo(() => {
+    if (data.length === 0) return [];
+    const platforms = Array.from(new Set(data.map(d => d.Most_Used_Platform)));
+    return platforms.sort();
+  }, [data]);
+
+  // Initialize selected platform when data changes
+  useEffect(() => {
+    if (availablePlatforms.length > 0 && !selectedPlatformForMap) {
+      setSelectedPlatformForMap(availablePlatforms[0]);
+    }
+  }, [availablePlatforms, selectedPlatformForMap]);
+
+  // Platform-specific country distribution
+  const platformCountryData = useMemo((): BarChartData[] => {
+    if (data.length === 0 || !selectedPlatformForMap) return [];
+    
+    // Filter data for the selected platform
+    const platformData = data.filter(d => d.Most_Used_Platform === selectedPlatformForMap);
+    
+    // Count students by country
+    const grouped = d3.rollup(
+      platformData, 
+      v => v.length, 
+      d => getMappedCountryName(d.Country)
+    );
+
+    // Helper to shorten names for the bar chart axis
+    const shortenName = (name: string) => {
+      const reverseMap: Record<string, string> = {
+        "United States of America": "USA",
+        "United Kingdom": "UK",
+        "United Arab Emirates": "UAE",
+        "Syrian Arab Republic": "Syria",
+        "Bosnia and Herzegovina": "Bosnia",
+        "Czechia": "Czech Republic",
+        "Trinidad and Tobago": "Trinidad",
+        "Republic of Korea": "South Korea"
+      };
+      return reverseMap[name] || name;
+    };
+
+    const sorted = Array.from(grouped, ([longName, value]) => ({ 
+      label: shortenName(longName), 
+      value 
+    }))
+      .sort((a, b) => mapSortOrder === 'Highest' ? b.value - a.value : a.value - b.value)
+      .slice(0, 15);
+
+    return sorted;
+  }, [data, selectedPlatformForMap, mapSortOrder]);
 
   const conflictsVSDailyUsageData = useMemo((): LineChartData[] => {
     if (data.length === 0) return [];
@@ -820,13 +875,56 @@ const AnalyzeData: React.FC = () => {
                         </div>
                       </ChartContainer>
                     ) : (
-                      <ChartContainer title="Most Used Platform" icon1={<BarChartIcon size={18} />}>
-                      <div className="h-full flex items-center justify-center">
-                        <div className="text-center text-gray-400">
-                          <div className="text-md font-bold">No chart available for "Most Used Platform".</div>
-                          <div className="text-sm mt-1">Please select a numeric metric to view the country bar chart.</div>
+                      <ChartContainer 
+                        title={`${mapSortOrder === 'Highest' ? 'Top' : 'Bottom'} 15 Countries Using ${selectedPlatformForMap}`} 
+                        icon1={platformIcons[selectedPlatformForMap] || <BarChartIcon size={18} />}
+                        rightElement={
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                              <label className="text-gray-400 text-xs">Platform:</label>
+                              <DropdownUp
+                                value={selectedPlatformForMap}
+                                onChange={setSelectedPlatformForMap}
+                                options={availablePlatforms.map(platform => ({
+                                  value: platform,
+                                  label: platform
+                                }))}
+                              />
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <label className="text-gray-400 text-xs">Sort:</label>
+                              <DropdownUp
+                                value={mapSortOrder}
+                                onChange={(value) => setMapSortOrder(value as 'Highest' | 'Lowest')}
+                                options={[
+                                  { value: 'Highest', label: 'Highest 15' },
+                                  { value: 'Lowest', label: 'Lowest 15' }
+                                ]}
+                              />
+                            </div>
+                          </div>
+                        }
+                      >
+                        <div className="h-[300px]">
+                          <BarChart 
+                            data={platformCountryData.map(d => ({
+                              label: d.label,
+                              value: d.value
+                            }))} 
+                            xLabel="Country" 
+                            yLabel="Number of Students"
+                            colours={(() => {
+                              // Use bright cyan for TikTok for better visibility on dark background
+                              const platformColor = selectedPlatformForMap === 'TikTok' 
+                                ? '#25F4EE' 
+                                : socialMediaColors[selectedPlatformForMap];
+                              
+                              return platformColor 
+                                ? [platformColor + '40', platformColor]
+                                : ['#dbeafe', '#1e40af'];
+                            })()}
+                          />
                         </div>
-                      </div>
                       </ChartContainer>
                     )}
                   </div>

@@ -212,7 +212,8 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
         .text(yLabel);
     }
 
-
+    // Remove any existing tooltips before updating
+    g.selectAll('.tooltip').remove();
 
     // Bars with animations
     const bars = g.selectAll<SVGRectElement, BarChartData>('.bar')
@@ -238,10 +239,15 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
       .attr('stroke', '#1f2937')
       .attr('stroke-width', 1)
       .attr('opacity', 0)
-      .style('cursor', 'pointer');
+      .style('cursor', 'pointer')
+      .style('pointer-events', 'none');
 
     // Merge and update
-    bars.merge(barsEnter)
+    const allBars = bars.merge(barsEnter);
+    
+    // Disable pointer events and start transition
+    allBars
+      .style('pointer-events', 'none')
       .transition()
       .duration(500)
       .attr('x', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>)(d.label)! : xScale(0))
@@ -249,7 +255,11 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
       .attr('width', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : (xScale as d3.ScaleLinear<number, number>)(d.value))
       .attr('height', d => orientation === 'vertical' ? chartHeight - (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>).bandwidth())
       .style('fill', (d, i) => colorScale(i, d.label))
-      .attr('opacity', 0.8);
+      .attr('opacity', 0.8)
+      .on('end', function() {
+        // Re-enable pointer events after transition completes
+        d3.select(this).style('pointer-events', 'auto');
+      });
 
     // Icons above bars
     if (iconMap) {
