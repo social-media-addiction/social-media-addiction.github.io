@@ -182,7 +182,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({ data, xLabel = 'X Axis', yL
       .attr('cy', d => yScale(d.y))
       .attr('r', 5)
       .attr('fill', color)
-      .attr('opacity', 0.7);
+      .attr('opacity', 0.8);
 
     // Add hover events
     g.selectAll<SVGCircleElement, ScatterData>('.dot')
@@ -228,7 +228,7 @@ const ScatterGraph: React.FC<ScatterGraphProps> = ({ data, xLabel = 'X Axis', yL
           .transition()
           .duration(200)
           .attr('r', 5)
-          .attr('opacity', 0.7);
+          .attr('opacity', 0.8);
         
         // Remove tooltip
         g.selectAll('.tooltip').remove();

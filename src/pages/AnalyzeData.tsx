@@ -640,7 +640,7 @@ const AnalyzeData: React.FC = () => {
               {activeTab === 'Platform Profiles' && (
                 /* Platform Profiles Tab */
                 <div className="flex flex-col h-full">
-                  <div className="bg-gray-900 border border-gray-700 shadow-lg rounded-lg p-6 relative mb-4 shrink-0">
+                  <div className="bg-gray-900/50 border border-gray-700 shadow-lg rounded-lg p-6 relative mb-4 shrink-0">
                     <h2 className="text-3xl font-bold mb-3 text-teal-300 inline-flex gap-2"><Users size={32} />Platform Personality Profiles</h2>
                     <p className="text-gray-400 text-sm mt-2"><b>Higher values =</b> More problematic in that area. Select platforms below to compare.</p>
                     
@@ -754,7 +754,6 @@ const AnalyzeData: React.FC = () => {
                         <option value="Count">Student Count</option>
                         <option value="Addicted_Score">Addiction Score</option>
                         <option value="Sleep_Hours_Per_Night">Sleep Hours</option>
-                        <option value="Conflicts_Over_Social_Media">Conflicts</option>
                         <option value="Mental_Health_Score">Mental Health Score</option>
                       </select>
                     </div>
@@ -806,6 +805,11 @@ const AnalyzeData: React.FC = () => {
                               }
                             };
                             const colors = getColors();
+                            // For Mental Health Score, higher is better, so we need opposite logic
+                            if (mapMetric === 'Mental_Health_Score') {
+                              return mapSortOrder === 'Highest' ? colors : [...colors].reverse();
+                            }
+                            // For other metrics (Addiction, etc.), higher is worse
                             return mapSortOrder === 'Highest' ? [...colors].reverse() : colors;
                           })()} 
                         />

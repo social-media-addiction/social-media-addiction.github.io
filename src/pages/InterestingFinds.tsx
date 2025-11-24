@@ -235,7 +235,7 @@ const InterestingFinds: React.FC = () => {
 
 // Helper Components for cleaner code
 const MetricCard = ({ title, value, icon, trend, trendUp }: { title: string, value: React.ReactNode, icon: React.ReactNode, trend?: string, trendUp?: boolean }) => (
-  <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-5 rounded-xl hover:bg-white/10 transition-all duration-300 group">
+  <div className="bg-white/[0.03] backdrop-blur-sm border border-white/10 p-5 rounded-xl hover:bg-white/10 transition-all duration-300 group">
     <div className="flex justify-between items-start mb-2">
       <span className="text-gray-400 text-sm font-medium">{title}</span>
       <div className="p-2 bg-white/5 rounded-lg group-hover:scale-110 transition-transform duration-300">

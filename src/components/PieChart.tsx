@@ -89,6 +89,7 @@ const PieChart: React.FC<PieChartProps> = ({ data, colours }) => {
       .attr('fill', d => color(d.data.label))
       .attr('stroke', '#1f2937')
       .attr('stroke-width', 2)
+      .attr('opacity', 0.8)
       .style('cursor', 'pointer')
       .on('mouseenter', function(_event, d) {
         d3.select(this)

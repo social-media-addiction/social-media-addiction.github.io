@@ -249,7 +249,7 @@ const BarChart: React.FC<BarChartProps> = ({ data, orientation = 'vertical', xLa
       .attr('width', d => orientation === 'vertical' ? (xScale as d3.ScaleBand<string>).bandwidth() : (xScale as d3.ScaleLinear<number, number>)(d.value))
       .attr('height', d => orientation === 'vertical' ? chartHeight - (yScale as d3.ScaleLinear<number, number>)(d.value) : (yScale as d3.ScaleBand<string>).bandwidth())
       .style('fill', (d, i) => colorScale(i, d.label))
-      .attr('opacity', 1);
+      .attr('opacity', 0.8);
 
     // Icons above bars
     if (iconMap) {

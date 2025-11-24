@@ -137,7 +137,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({ originalData, data, activ
 
   return (
     <aside className="w-full lg:w-64 flex-shrink-0 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-700">
-      <div className="bg-gray-900/80 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-xl">
+      <div className="bg-gray-900/50 backdrop-blur-md p-4 rounded-xl border border-white/10 shadow-xl">
         <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-2">
           <h3 className="text-lg font-bold text-sky-300">
             Filters

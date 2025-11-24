@@ -160,6 +160,7 @@ const LineChart: React.FC<LineChartProps> = ({
       .attr('fill', 'none')
       .attr('stroke', color)
       .attr('stroke-width', 3)
+      .attr('opacity', 0.8)
       .attr('d', line);
 
     // Add dots
