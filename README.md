@@ -2,6 +2,23 @@
 
 This project is an interactive data visualization dashboard to analyze the impact of social media usage on university students.
 
+## How to run the project
+
+
+`The website is deployed at:` [Social Media Addiction](https://social-media-addiction.github.io/)
+
+`Locally:`
+
+1.  **Install dependencies:**
+    ```bash
+    npm install
+    ```
+
+2.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
+
 ## Features
 
 *   **Analyze Data:** A comprehensive dashboard for in-depth data exploration with extensive filtering.
@@ -28,14 +45,3 @@ This project is an interactive data visualization dashboard to analyze the impac
 *   **Animations:** Framer Motion
 *   **Icons:** Lucide React, React Icons
 
-## How to run the project
-
-1.  **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-2.  **Run the development server:**
-    ```bash
-    npm run dev
-    ```
