@@ -3,10 +3,11 @@ import React, { useEffect, useRef, useState } from "react";
 import { StudentRecord } from "../data/data";
 import { feature, mesh } from "topojson-client";
 import type { FeatureCollection, Geometry } from "geojson";
+import { socialMediaColors } from "./SocialMediaColors";
 
 interface WorldMapProps {
     studentData: StudentRecord[];
-    onCountrySelect?: (country: string, value: number | undefined) => void;
+    onCountrySelect?: (country: string, value: number | string | undefined) => void;
     metric?: keyof StudentRecord | "Count";
     onMetricChange?: (metric: keyof StudentRecord | "Count") => void;
     hideControls?: boolean;
@@ -35,17 +36,28 @@ export const METRIC_OPTIONS = [
     { key: "Avg_Daily_Usage_Hours", label: "Daily Usage (hours)" },
     { key: "Sleep_Hours_Per_Night", label: "Sleep (hours)" },
     { key: "Mental_Health_Score", label: "Mental Health Score" },
+    { key: "Most_Used_Platform", label: "Most Used Platform" }
 ];
 
 function aggregateByCountry(data: StudentRecord[], metric: keyof StudentRecord | "Count") {
     return new Map(
         d3.rollup(
             data,
-            v => metric === "Count" ? v.length : (d3.mean(v, d => Number(d[metric as keyof StudentRecord])) ?? 0),
+            v => {
+                if (metric === "Count") return v.length;
+
+                if (metric === "Most_Used_Platform") {
+                    const counts = d3.rollup(v, vv => vv.length, d => d.Most_Used_Platform);
+                    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0][0];
+                }
+
+                return d3.mean(v, d => Number(d[metric])) ?? 0;
+            },
             d => getMappedCountryName(d.Country)
         )
     );
 }
+
 
 const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metric: externalMetric, onMetricChange, hideControls }) => {
     const svgRef = useRef<SVGSVGElement | null>(null);
@@ -66,71 +78,85 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
     };
 
     useEffect(() => {
-    async function loadMapData() {
-      try {
-        const worldData = await d3.json(
-          "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"
-        ) as any;
+        async function loadMapData() {
+            try {
+                const worldData = await d3.json(
+                    "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json"
+                ) as any;
 
-        const countries = feature(
-          worldData,
-          worldData.objects.countries
-        ) as unknown as FeatureCollection<Geometry, { name: string }>;
+                const countries = feature(
+                    worldData,
+                    worldData.objects.countries
+                ) as unknown as FeatureCollection<Geometry, { name: string }>;
 
-        const meshData = mesh(
-          worldData,
-          worldData.objects.countries,
-          (a, b) => a !== b
-        );
+                const meshData = mesh(
+                    worldData,
+                    worldData.objects.countries,
+                    (a, b) => a !== b
+                );
 
-        setCountriesData(countries);
-        setCountryMeshData(meshData);
+                setCountriesData(countries);
+                setCountryMeshData(meshData);
 
-      } catch (error) {
-        console.error("Erro ao carregar dados do mapa:", error);
-      }
-    }
+            } catch (error) {
+                console.error("Error loading map data:", error);
+            }
+        }
 
-    loadMapData();
-  }, []);
+        loadMapData();
+    }, []);
 
     useEffect(() => {
         if (!svgRef.current || !containerRef.current || !countriesData || !countryMeshData) {
-      return;
-    }
+            return;
+        }
 
         const width = 928;
         const marginTop = 40;
         const height = width / 2 + marginTop;
 
         const values = Array.from(valuemap.values());
-        const [minVal, maxVal] = d3.extent(values) as [number, number];
+        let minVal: number | undefined;
+        let maxVal: number | undefined;
+
+        if (metric !== "Most_Used_Platform") {
+            const numericValues = values.filter((v): v is number => typeof v === "number" && !isNaN(v));
+            const extent = d3.extent(numericValues);
+            minVal = extent[0];
+            maxVal = extent[1];
+        } else {
+            minVal = undefined;
+            maxVal = undefined;
+        }
 
         const colorDomain = [minVal ?? 0, maxVal ?? 1];
-        
+
         // Define color schemes based on metric
         let colorInterpolator;
-        switch(metric) {
-          case 'Addicted_Score':
-            colorInterpolator = d3.interpolateRgb("#f5ee6fff", "#ab4663ff");
-            break;
-          case 'Avg_Daily_Usage_Hours':
-            colorInterpolator = d3.interpolateRgb("#49ffffff", "#12265bff");
-            break;
-          case 'Sleep_Hours_Per_Night':
-            colorInterpolator = d3.interpolateRgb("#470b53ff", "#bd95f5ff");
-            break;
-          case 'Mental_Health_Score':
-            colorInterpolator = d3.interpolateRgb("#0f2411ff", "#baf48eff");
-            break;
-          case 'Count':
-            colorInterpolator = d3.interpolateRgb("#6084f8ff", "#3d114fff");
-            break;
-          default:
-            colorInterpolator = d3.interpolateRgb("#521db9", "#00e8a2");
+        switch (metric) {
+            case 'Addicted_Score':
+                colorInterpolator = d3.interpolateRgb("#f5ee6fff", "#ab4663ff");
+                break;
+            case 'Avg_Daily_Usage_Hours':
+                colorInterpolator = d3.interpolateRgb("#49ffffff", "#12265bff");
+                break;
+            case 'Sleep_Hours_Per_Night':
+                colorInterpolator = d3.interpolateRgb("#470b53ff", "#bd95f5ff");
+                break;
+            case 'Mental_Health_Score':
+                colorInterpolator = d3.interpolateRgb("#0f2411ff", "#baf48eff");
+                break;
+            case 'Count':
+                colorInterpolator = d3.interpolateRgb("#6084f8ff", "#3d114fff");
+                break;
+            case 'Most_Used_Platform':
+                colorInterpolator = d3.interpolateRgb("#ff9a3cff", "#6b0f1aff");
+                break;
+            default:
+                colorInterpolator = d3.interpolateRgb("#521db9", "#00e8a2");
         }
-        
-        const color = d3.scaleSequential(colorDomain, colorInterpolator);
+
+        const color = d3.scaleSequential(colorInterpolator).domain(colorDomain);
 
         const projection = d3.geoEqualEarth().fitExtent([[2, marginTop + 2], [width - 2, height]], { type: "Sphere" });
         const path = d3.geoPath(projection);
@@ -160,8 +186,18 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
             .join("path")
             .attr("fill", (d: any) => {
                 const v = valuemap.get(d.properties.name);
-                return v != null ? color(v) : "#cccccc";
+
+                if (v == null) return "#cccccc";
+
+                // platform case → use fixed colors
+                if (metric === "Most_Used_Platform") {
+                    return socialMediaColors[v] ?? "#666666";
+                }
+
+                // numeric case → use interpolated color
+                return color(Number(v));
             })
+
             .attr("stroke", "#222")
             .attr("stroke-width", 0.35)
             .attr("d", path as any)
@@ -196,9 +232,17 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
         countryPaths
             .on("mouseenter", (event, d: any) => {
                 const val = valuemap.get(d.properties.name);
+                let displayVal: string;
+                if (val == null) {
+                    displayVal = "No data";
+                } else if (typeof val === "number") {
+                    displayVal = val.toFixed(1);
+                } else {
+                    displayVal = String(val);
+                }
                 tooltipDiv
                     .style("display", "block")
-                    .html(`<b>${d.properties.name}</b><br>${METRIC_OPTIONS.find(m => m.key === metric)?.label}: ${val?.toFixed(1) ?? "No data"}`);
+                    .html(`<b>${d.properties.name}</b><br>${METRIC_OPTIONS.find(m => m.key === metric)?.label}: ${displayVal}`);
                 const [x, y] = d3.pointer(event);
                 tooltipDiv
                     .style("left", x + 3 + "px")
@@ -206,7 +250,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
             })
             .on("mousemove", (event) => {
                 const [x, y] = d3.pointer(event);
-
+    
                 tooltipDiv
                     .style("left", x + 3 + "px")
                     .style("top", y + 3 + "px");
@@ -224,7 +268,7 @@ const WorldMap: React.FC<WorldMapProps> = ({ studentData, onCountrySelect, metri
 
         svg.call(zoom);
 
-        if (minVal !== undefined && maxVal !== undefined) {
+        if (metric !== "Most_Used_Platform" && minVal !== undefined && maxVal !== undefined) {
             // LEGEND
             const legendWidth = 300;
             const legendHeight = 12;

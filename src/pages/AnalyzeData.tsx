@@ -657,18 +657,20 @@ const AnalyzeData: React.FC = () => {
                                 isSelected ? prev.filter(p => p !== profile.platform) : [...prev, profile.platform]
                               );
                             }}
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 outline-none ${
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all duration-200 outline-none cursor-pointer${
                               isSelected 
-                                ? 'bg-gray-800 border-transparent ring-1 ring-white/20' 
-                                : 'bg-transparent border-gray-600 text-gray-500 hover:border-gray-400'
+                                ? 'bg-gray-800 border-transparent ring-1 ring-teal-400' 
+                                : 'bg-transparent ring-1 ring-teal-400 text-gray-500 hover:border-gray-400  '
                             }`}
                             style={{ 
-                              boxShadow: isSelected ? `0 0 10px ${color}40` : 'none'
+                              boxShadow: isSelected ? `0 0 10px ${color}40` : 'none',
+                              border: isSelected ? '1.5px solid rgba(20,184,166,0.9)' : undefined
                             }}
                           >
                             <div 
                               className={`w-3 h-3 rounded-full shadow-sm`}
-                              style={{ backgroundColor: isSelected ? color : '#6b7280' }}
+                              style={{ backgroundColor: isSelected ? color : '#6b7280',                                
+                               }}
                             />
                             <span className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-400'}`}>
                               {profile.platform}
@@ -756,6 +758,7 @@ const AnalyzeData: React.FC = () => {
                         <option value="Avg_Daily_Usage_Hours">Daily Usage</option>
                         <option value="Sleep_Hours_Per_Night">Sleep Hours</option>
                         <option value="Mental_Health_Score">Mental Health Score</option>
+                        <option value="Most_Used_Platform">Most Used Platform</option>
                       </select>
                     </div>
                   </div>
@@ -772,51 +775,60 @@ const AnalyzeData: React.FC = () => {
                   </div>
                   
                   <div className="h-[400px]">
-                    <ChartContainer 
-                      title={`${mapSortOrder} 15 Countries by ${mapMetric === 'Count' ? 'Student Count' : mapMetric.replace(/_/g, ' ')}`}
-                      icon1={<BarChartIcon size={18} />}
-                      rightElement={
-                        <div className="flex items-center gap-2">
-                          <label className="text-gray-400 text-xs">Sort:</label>
-                          <select
-                            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
-                            value={mapSortOrder}
-                            onChange={(e) => setMapSortOrder(e.target.value as 'Highest' | 'Lowest')}
-                          >
-                            <option value="Highest">Highest 15</option>
-                            <option value="Lowest">Lowest 15</option>
-                          </select>
-                        </div>
-                      }
-                    >
-                      <div className="h-[300px]">
-                        <BarChart 
-                          data={mapBarChartData} 
-                          xLabel="Country" 
-                          yLabel={mapMetric === 'Count' ? 'Count' : 'Average Value'} 
-                          colours={(() => {
-                            const getColors = () => {
-                              switch (mapMetric) {
-                                case 'Count': return ['#dbeafe', '#1e40af']; // Blue: Light -> Dark
-                                case 'Addicted_Score': return ['#fee2e2', '#b91c1c']; // Red: Light -> Dark
-                                case 'Avg_Daily_Usage_Hours': return ['#cffafe', '#0e7490']; // Cyan: Light -> Dark
-                                case 'Sleep_Hours_Per_Night': return ['#f3e8ff', '#7e22ce']; // Purple: Light -> Dark
-                                case 'Conflicts_Over_Social_Media': return ['#ffedd5', '#c2410c']; // Orange: Light -> Dark
-                                case 'Mental_Health_Score': return ['#dcfce7', '#15803d']; // Green: Light -> Dark
-                                default: return ['#59cccaff', '#2c7a7b']; // Teal: Light -> Dark
+                    {mapMetric !== 'Most_Used_Platform' ? (
+                      <ChartContainer 
+                        title={`${mapSortOrder} 15 Countries by ${mapMetric === 'Count' ? 'Student Count' : mapMetric.replace(/_/g, ' ')}`}
+                        icon1={<BarChartIcon size={18} />}
+                        rightElement={
+                          <div className="flex items-center gap-2">
+                            <label className="text-gray-400 text-xs">Sort:</label>
+                            <select
+                              className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
+                              value={mapSortOrder}
+                              onChange={(e) => setMapSortOrder(e.target.value as 'Highest' | 'Lowest')}
+                            >
+                              <option value="Highest">Highest 15</option>
+                              <option value="Lowest">Lowest 15</option>
+                            </select>
+                          </div>
+                        }
+                      >
+                        <div className="h-[300px]">
+                          <BarChart 
+                            data={mapBarChartData} 
+                            xLabel="Country" 
+                            yLabel={mapMetric === 'Count' ? 'Count' : 'Average Value'} 
+                            colours={(() => {
+                              const getColors = () => {
+                                switch (mapMetric) {
+                                  case 'Count': return ['#dbeafe', '#1e40af'];
+                                  case 'Addicted_Score': return ['#fee2e2', '#b91c1c'];
+                                  case 'Avg_Daily_Usage_Hours': return ['#cffafe', '#0e7490'];
+                                  case 'Sleep_Hours_Per_Night': return ['#f3e8ff', '#7e22ce'];
+                                  case 'Conflicts_Over_Social_Media': return ['#ffedd5', '#c2410c'];
+                                  case 'Mental_Health_Score': return ['#dcfce7', '#15803d'];
+                                  default: return ['#59cccaff', '#2c7a7b'];
+                                }
+                              };
+                              const colors = getColors();
+                              if (mapMetric === 'Mental_Health_Score') {
+                                return mapSortOrder === 'Highest' ? colors : [...colors].reverse();
                               }
-                            };
-                            const colors = getColors();
-                            // For Mental Health Score, higher is better, so we need opposite logic
-                            if (mapMetric === 'Mental_Health_Score') {
-                              return mapSortOrder === 'Highest' ? colors : [...colors].reverse();
-                            }
-                            // For other metrics (Addiction, etc.), higher is worse
-                            return mapSortOrder === 'Highest' ? [...colors].reverse() : colors;
-                          })()} 
-                        />
+                              return mapSortOrder === 'Highest' ? [...colors].reverse() : colors;
+                            })()} 
+                          />
+                        </div>
+                      </ChartContainer>
+                    ) : (
+                      <ChartContainer title="Most Used Platform" icon1={<BarChartIcon size={18} />}>
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center text-gray-400">
+                          <div className="text-md font-bold">No chart available for "Most Used Platform".</div>
+                          <div className="text-sm mt-1">Please select a numeric metric to view the country bar chart.</div>
+                        </div>
                       </div>
-                    </ChartContainer>
+                      </ChartContainer>
+                    )}
                   </div>
                 </div>
               )}
