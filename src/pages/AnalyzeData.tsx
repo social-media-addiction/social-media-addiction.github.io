@@ -1,9 +1,9 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
 import * as d3 from 'd3';
+import { socialMediaColors } from '../components/SocialMediaColors';
 import { loadStudentData, StudentRecord, filterData, FilterCriteria } from "../data/data";
 import Aurora from "../components/Aurora";
 import BoxPlot, { BoxPlotData } from '../components/BoxPlot';
-import ChartContainer from '../components/ChartContainer';
 import BarChart, { BarChartData } from '../components/BarChart';
 import LineChart, { LineChartData } from '../components/LineChart';
 import PieChart, { PieChartData } from '../components/PieChart';
@@ -14,7 +14,7 @@ import WorldMap from "../components/WorldMap";
 
 import FilterSidebar from "../components/FilterSideBar";
 
-import { Clock, GraduationCap, Users, Heart, BookOpen, Angry, Brain, Bed, ArrowDownRight, Globe } from "lucide-react";
+import { Clock, GraduationCap, Users, Heart, BookOpen, Angry, Brain, Bed, ArrowDownRight, Globe, BarChart as BarChartIcon } from "lucide-react";
 import { FaInstagram, FaTwitter, FaYoutube, FaFacebook, FaLinkedin, FaSnapchat, FaWhatsapp, FaWeixin, FaVk } from "react-icons/fa";
 import { SiLine, SiKakaotalk } from "react-icons/si";
 import tiktok from "../assets/tiktok.png";
@@ -27,6 +27,8 @@ const AnalyzeData: React.FC = () => {
 
   // New State for Tabs
   const [activeTab, setActiveTab] = useState<string>('Demographics');
+  const [mapMetric, setMapMetric] = useState<keyof StudentRecord | "Count">("Count");
+  const [mapSortOrder, setMapSortOrder] = useState<'Highest' | 'Lowest'>('Highest');
 
   // State for Platform Comparison
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
@@ -101,28 +103,8 @@ const AnalyzeData: React.FC = () => {
       d => d.Most_Used_Platform
     );
 
-    // Color palette to use for platform profiles
-    // Color palette to use for platform profiles
-    const colors = [
-      '#ec59a5ff', // Pink
-      '#90d1d6ff', // Cyan-ish
-      '#60a5fa',   // Blue
-      '#34d399',   // Green
-      '#f472b6',   // Light Pink
-      '#a78bfa',   // Purple
-      '#fbbf24',   // Amber
-      '#f87171',   // Red
-      '#22d3ee',   // Cyan
-      '#c084fc',   // Violet
-      '#e879f9',   // Fuchsia
-      '#2dd4bf',   // Teal
-      '#f43f5e',   // Rose
-      '#818cf8',   // Indigo
-      '#a3e635',   // Lime
-    ];
-
     // Return platforms in the fixed order, assigning colors from the palette
-    return topPlatformsByOriginal.map((platform, idx) => {
+    return topPlatformsByOriginal.map((platform) => {
       const stats = platformStats.get(platform) || {
         addiction: 0,
         sleepLoss: 0,
@@ -131,11 +113,14 @@ const AnalyzeData: React.FC = () => {
         mentalDamage: 0
       };
 
+      // Use official brand color or fallback to a default palette/gray
+      const color = socialMediaColors[platform] || '#9ca3af';
+
       return {
         platform,
         data: [{
           name: platform,
-          color: colors[idx % colors.length],
+          color: color,
           data: [
             { axis: "Addiction", value: stats.addiction },
             { axis: "Sleep Loss", value: stats.sleepLoss },
@@ -274,6 +259,26 @@ const AnalyzeData: React.FC = () => {
     return Array.from(avgVSMentalHealth, ([x, y]) => ({ x, y })).sort((a, b) => (a.x as number) - (b.x as number));
   }, [data]);
 
+  const yMax = useMemo(() => d3.max(data, d => d.Avg_Daily_Usage_Hours) || 0, [data]);
+  const conflictsYMax = useMemo(() => d3.max(data, d => d.Conflicts_Over_Social_Media) || 0, [data]);
+
+  const mapBarChartData = useMemo((): BarChartData[] => {
+    if (data.length === 0) return [];
+
+    let grouped;
+    if (mapMetric === "Count") {
+      grouped = d3.rollup(data, v => v.length, d => d.Country);
+    } else {
+      grouped = d3.rollup(data, v => d3.mean(v, d => Number(d[mapMetric])) || 0, d => d.Country);
+    }
+
+    const sorted = Array.from(grouped, ([label, value]) => ({ label, value }))
+      .sort((a, b) => mapSortOrder === 'Highest' ? b.value - a.value : a.value - b.value)
+      .slice(0, 15);
+
+    return sorted;
+  }, [data, mapMetric, mapSortOrder]);
+
   const conflictsVSDailyUsageData = useMemo((): LineChartData[] => {
     if (data.length === 0) return [];
     const avgVSDailyUsage = d3.rollup(data, v => d3.mean(v, d => d.Conflicts_Over_Social_Media) || 0, d => Math.round(d.Avg_Daily_Usage_Hours));
@@ -294,8 +299,7 @@ const AnalyzeData: React.FC = () => {
       .sort((a, b) => Number(a.label) - Number(b.label));
   }, [data]);
 
-  const yMax = useMemo(() => d3.max(data, d => d.Avg_Daily_Usage_Hours) || 0, [data]);
-  const conflictsYMax = useMemo(() => d3.max(data, d => d.Conflicts_Over_Social_Media) || 0, [data]);
+
 
   const tabs = [
     'Demographics',
@@ -702,13 +706,64 @@ const AnalyzeData: React.FC = () => {
               )}
 
               {activeTab === 'Geographics' && (
-                /* Geographic Tab - Full Height Map */
-                <div className="h-[calc(100vh-12rem)]">
-                  <ChartContainer title="Geographic Distribution" icon1={<Globe size={18} />}>
-                    <div className="h-full">
-                      <WorldMap studentData={data} />
+                <div className="space-y-6">
+                  {/* Shared Controls */}
+                  <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 flex flex-wrap gap-4 items-center justify-between shadow-lg backdrop-blur-sm">
+                    <div className="flex items-center gap-3">
+                      <label className="text-gray-300 text-sm font-medium">Metric:</label>
+                      <select
+                        className="bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm text-white focus:outline-none focus:border-teal-400 transition-colors"
+                        value={mapMetric}
+                        onChange={(e) => setMapMetric(e.target.value as any)}
+                      >
+                        <option value="Count">Student Count</option>
+                        <option value="Addicted_Score">Addiction Score</option>
+                        <option value="Sleep_Hours_Per_Night">Sleep Hours</option>
+                        <option value="Conflicts_Over_Social_Media">Conflicts</option>
+                        <option value="Mental_Health_Score">Mental Health Score</option>
+                      </select>
                     </div>
-                  </ChartContainer>
+                  </div>
+
+                  <div className="h-[500px]">
+                    <ChartContainer 
+                      title={`Geographic Distribution - ${mapMetric === 'Count' ? 'Student Count' : mapMetric.replace(/_/g, ' ')}`} 
+                      icon1={<Globe size={18} />}
+                    >
+                      <div className="h-full">
+                        <WorldMap studentData={data} metric={mapMetric} onMetricChange={setMapMetric} hideControls />
+                      </div>
+                    </ChartContainer>
+                  </div>
+                  
+                  <div className="h-[400px]">
+                    <ChartContainer 
+                      title={`${mapSortOrder} 15 Countries by ${mapMetric === 'Count' ? 'Student Count' : mapMetric.replace(/_/g, ' ')}`}
+                      icon1={<BarChartIcon size={18} />}
+                      rightElement={
+                        <div className="flex items-center gap-2">
+                          <label className="text-gray-400 text-xs">Sort:</label>
+                          <select
+                            className="bg-gray-700 border border-gray-600 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-teal-400"
+                            value={mapSortOrder}
+                            onChange={(e) => setMapSortOrder(e.target.value as 'Highest' | 'Lowest')}
+                          >
+                            <option value="Highest">Highest 15</option>
+                            <option value="Lowest">Lowest 15</option>
+                          </select>
+                        </div>
+                      }
+                    >
+                      <div className="h-[300px]">
+                        <BarChart 
+                          data={mapBarChartData} 
+                          xLabel="Country" 
+                          yLabel={mapMetric === 'Count' ? 'Count' : 'Average Value'} 
+                          colours={["#59cccaff"]} 
+                        />
+                      </div>
+                    </ChartContainer>
+                  </div>
                 </div>
               )}
 
@@ -719,5 +774,35 @@ const AnalyzeData: React.FC = () => {
     </div>
   );
 };
+
+interface ChartContainerProps {
+  title: string;
+  children: React.ReactNode;
+  icon1?: React.ReactNode;
+  icon2?: React.ReactNode;
+  rightElement?: React.ReactNode;
+}
+
+const ChartContainer: React.FC<ChartContainerProps> = ({ title, children, icon1, icon2, rightElement }) => (
+  <div className="bg-gray-800/50 p-4 rounded-xl border border-gray-700 h-full flex flex-col shadow-lg backdrop-blur-sm hover:border-teal-500/30 transition-colors duration-300">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-2">
+        <div className="p-2 bg-teal-500/10 rounded-lg text-teal-400">
+          {icon1}
+        </div>
+        <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
+        {icon2 && (
+          <div className="p-2 bg-teal-500/10 rounded-lg text-teal-400">
+            {icon2}
+          </div>
+        )}
+      </div>
+      {rightElement}
+    </div>
+    <div className="flex-1 min-h-0 relative">
+      {children}
+    </div>
+  </div>
+);
 
 export default AnalyzeData;

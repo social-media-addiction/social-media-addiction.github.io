@@ -194,10 +194,10 @@ export default function IntroductionPage() {
                 <div className="timeline-end mb-10 md:text-start">
                   <div className="text-xl font-black text-[#69b3a2]">Scope & Coverage</div>
                   <p className="mt-2">
-                    - <b>Population:</b> Students aged 18–24.<br />
-                    - <b>Geography:</b> Bangladesh, India, USA, UK, Canada, and more.<br />
-                    - <b>Timeframe:</b> Q1 2025 online survey.<br />
-                    - <b>Volume:</b> 705 entries after cleaning.
+                    <span className="text-[#69b3a2]">•</span> <b>Population:</b> Students aged 18–24.<br />
+                    <span className="text-[#69b3a2]">•</span> <b>Geography:</b> Bangladesh, India, USA, UK, Canada, and more.<br />
+                    <span className="text-[#69b3a2]">•</span> <b>Timeframe:</b> Q1 2025 online survey.<br />
+                    <span className="text-[#69b3a2]">•</span> <b>Volume:</b> 705 entries after cleaning.
                   </p>
                 </div>
                 <hr />
@@ -212,8 +212,8 @@ export default function IntroductionPage() {
                 <div className="timeline-start md:mb-10 md:text-end">
                   <div className="text-xl font-black text-[#69b3a2]">Data Collection & Methodology</div>
                   <p className="mt-2">
-                    - Based on the Bergen Social Media Addiction Scale.<br />
-                    - Recruited via universities and social media.
+                    <span className="text-[#69b3a2]">•</span> Based on the Bergen Social Media Addiction Scale.<br />
+                    <span className="text-[#69b3a2]">•</span> Recruited via universities and social media.
                   </p>
                 </div>
                 <hr />
@@ -228,9 +228,9 @@ export default function IntroductionPage() {
                 <div className="timeline-end mb-10 md:text-start">
                   <div className="text-xl font-black text-[#69b3a2]">Data Quality Controls</div>
                   <p className="mt-2">
-                    - Range validation (0–24 hours/day).<br />
-                    - De-duplication via Student_ID.<br />
-                    - Strict anonymization (no identifiers).
+                    <span className="text-[#69b3a2]">•</span> Range validation (0–24 hours/day).<br />
+                    <span className="text-[#69b3a2]">•</span> De-duplication via Student_ID.<br />
+                    <span className="text-[#69b3a2]">•</span> Strict anonymization (no identifiers).
                   </p>
                 </div>
               </TimelineItem>
@@ -279,11 +279,13 @@ export default function IntroductionPage() {
         </h2>
 
         <section>
-          <details className="collapse collapse-arrow bg-gray-900/80 border border-gray-700 shadow-lg">
-            <summary className="collapse-title font-semibold text-[#69b3a2]">Dataset Limitations</summary>
-            <div className="collapse-content text-md">- Self-report bias may affect accuracy.<br />- Data collected at one point in time (no causal inference).</div>
-
-          </details>
+          <div className="bg-gray-900/80 border border-gray-700 shadow-lg rounded-xl p-6">
+            <h3 className="font-semibold text-[#69b3a2] text-xl mb-2">Dataset Limitations</h3>
+            <div className="text-md text-gray-200">
+              <span className="text-[#69b3a2]">•</span> Self-report bias may affect accuracy.<br />
+              <span className="text-[#69b3a2]">•</span> Data collected at one point in time (no causal inference).
+            </div>
+          </div>
         </section>
 
       </main>

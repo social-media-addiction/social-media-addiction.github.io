@@ -3,6 +3,7 @@ import { ReactElement, useState, useEffect, useMemo } from "react";
 import { Brain, Users, GraduationCap, Globe, ChevronLeft } from "lucide-react";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
+import BarChart, { BarChartData } from '../components/BarChart';
 import bgVideo from "../assets/videos/bg-small.mp4";
 
 
@@ -165,6 +166,8 @@ export default function ExploreRoom() {
   }, [filteredData]);
 
 
+
+
   return (
     <div className="relative h-screen overflow-hidden">
       {/* Background video */}
@@ -255,224 +258,216 @@ export default function ExploreRoom() {
         onClick={() => setZoomedSpot(null)}
       />
 
-      {/* Left Fixed Filter Panel */}
+      {/* Unified Zoomed Content (Filters + Card) */}
       <AnimatePresence>
-        {zoomedSpot && (
+        {zoomedSpot && showInfo && (
           <motion.div
-            initial={{ x: -40, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -40, opacity: 0 }}
-            transition={{ duration: 0.4 }}
-            className="
-        fixed top-1/2 left-7
-        -translate-y-1/2
-        w-72
-        max-h-[90vh] 
-        overflow-y-auto
-        bg-gray-900/50
-        backdrop-blur-lg
-        border border-teal-400/40
-        text-white
-        rounded-xl
-        p-6
-        shadow-lg
-        z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-50 flex flex-col lg:flex-row items-center justify-center gap-6 p-4 pointer-events-none"
           >
-            <h3 className="text-xl font-bold text-teal-300 mb-3">Filters</h3>
+            {/* Filter Panel */}
+            <div className="
+              w-72 
+              max-h-[30vh] lg:max-h-[80vh]
+              overflow-y-auto
+              bg-gray-900/80
+              backdrop-blur-lg
+              border border-teal-400/40
+              text-white
+              rounded-xl
+              p-6
+              shadow-lg
+              pointer-events-auto
+              shrink-0"
+            >
+              <h3 className="text-xl font-bold text-teal-300 mb-3">Filters</h3>
 
-            {/* Gender */}
-            <div className="mb-4">
-              <p className="text-teal-300 font-semibold mb-1">Gender</p>
-              {["Male", "Female"].map(g => (
-                <label key={g} className="flex items-center gap-2 mb-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="checkbox checkbox-sm rounded-sm bg-white/10 text-teal-300"
-                    checked={filters.gender.includes(g)}
-                    onChange={(e) => {
-                      setFilters(prev => ({
-                        ...prev,
-                        gender: e.target.checked
-                          ? [...prev.gender.filter(x => x !== "All"), g]
-                          : prev.gender.filter(x => x !== g)
-                      }));
-                    }}
-                  />
-                  <span>{g}</span>
-                </label>
-              ))}
-            </div>
-
-            {/* Academic Level */}
-            <div className="mb-4">
-              <p className="text-teal-300 font-semibold mb-1">Academic Level</p>
-              {["High School", "Undergraduate", "Graduate"].map(level => (
-                <label key={level} className="flex items-center gap-2 mb-1 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="checkbox checkbox-sm rounded-sm bg-white/10 text-teal-300"
-                    checked={filters.academicLevel.includes(level)}
-                    onChange={(e) => {
-                      setFilters(prev => ({
-                        ...prev,
-                        academicLevel: e.target.checked
-                          ? [...prev.academicLevel.filter(a => a !== "All"), level]
-                          : prev.academicLevel.filter(a => a !== level)
-                      }));
-                    }}
-                  />
-                  <span>{level}</span>
-                </label>
-              ))}
-            </div>
-
-            {/* Age Range */}
-            <div>
-              <p className="text-teal-300 font-semibold mb-1">Age Range</p>
-              <RangeSlider
-                key="age-slider"
-                min={ageBounds.min}
-                max={ageBounds.max}
-                initialMin={ageBounds.rangeMin}
-                initialMax={ageBounds.rangeMax}
-                onChange={handleAgeRangeChange}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-
-      {/* Info card (appears after zoom) */}
-      <AnimatePresence>
-        {zoomedSpot && showInfo && selectedSpot && (
-          <motion.div
-            key={selectedSpot.id}
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.95 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="
-        absolute top-1/2 left-1/2 
-        transform -translate-x-1/2 -translate-y-1/2
-        max-w-[calc(100vw-20rem)] 
-        w-11/12 md:w-3/4 lg:w-3/5
-        z-50
-        bg-gray-900/50
-        backdrop-blur-md
-        border border-teal-400/40
-        text-white
-        rounded-2xl
-        p-6
-        shadow-lg"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-2xl font-bold text-teal-300 flex items-center gap-2">
-                  <button
-                    onClick={() => setZoomedSpot(null)}
-                    className="hover:text-teal-100 transition-colors focus:outline-none cursor-pointer"
-                    aria-label="Go back"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                  {selectedSpot.label}
-                </h3>
+              {/* Gender */}
+              <div className="mb-4">
+                <p className="text-teal-300 font-semibold mb-1">Gender</p>
+                {["Male", "Female"].map(g => (
+                  <label key={g} className="flex items-center gap-2 mb-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm rounded-sm bg-white/10 text-teal-300"
+                      checked={filters.gender.includes(g)}
+                      onChange={(e) => {
+                        setFilters(prev => ({
+                          ...prev,
+                          gender: e.target.checked
+                            ? [...prev.gender.filter(x => x !== "All"), g]
+                            : prev.gender.filter(x => x !== g)
+                        }));
+                      }}
+                    />
+                    <span>{g}</span>
+                  </label>
+                ))}
               </div>
 
+              {/* Academic Level */}
+              <div className="mb-4">
+                <p className="text-teal-300 font-semibold mb-1">Academic Level</p>
+                {["High School", "Undergraduate", "Graduate"].map(level => (
+                  <label key={level} className="flex items-center gap-2 mb-1 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="checkbox checkbox-sm rounded-sm bg-white/10 text-teal-300"
+                      checked={filters.academicLevel.includes(level)}
+                      onChange={(e) => {
+                        setFilters(prev => ({
+                          ...prev,
+                          academicLevel: e.target.checked
+                            ? [...prev.academicLevel.filter(a => a !== "All"), level]
+                            : prev.academicLevel.filter(a => a !== level)
+                        }));
+                      }}
+                    />
+                    <span>{level}</span>
+                  </label>
+                ))}
+              </div>
 
+              {/* Age Range */}
+              <div>
+                <p className="text-teal-300 font-semibold mb-1">Age Range</p>
+                <RangeSlider
+                  key="age-slider"
+                  min={ageBounds.min}
+                  max={ageBounds.max}
+                  initialMin={ageBounds.rangeMin}
+                  initialMax={ageBounds.rangeMax}
+                  onChange={handleAgeRangeChange}
+                />
+              </div>
             </div>
 
-            <div className="w-full h-96 md:h-[34rem] relative">
-              {zoomedSpot === 'academic' && (
-                <div className="h-full w-full flex flex-col relative">
-                  <div className="absolute top-0 left-0 z-10">
-                    <select
-                      className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
-                      value={academicMetric}
-                      onChange={(e) => setAcademicMetric(e.target.value as 'Daily Usage' | 'Mental Health')}
-                    >
-                      <option value="Daily Usage" className="text-white" style={{ backgroundColor: '#414053' }}>vs Daily Usage</option>
-                      <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>vs Mental Health</option>
-                    </select>
-                  </div>
-                  <p className="text-md text-center mb-2">Negative Academic Impact vs {academicMetric}</p>
-                  <div className="h-[500px]">
-                    <LineChart
-                      data={academicMetric === 'Daily Usage' ? negativeImpactVsDailyUsageData : negativeImpactVsMentalHealthData}
-                      xLabel={academicMetric === 'Daily Usage' ? "Daily Usage (hours)" : "Mental Health Score"}
-                      yLabel="% Negatively Affected"
-                      color={academicMetric === 'Daily Usage' ? "#f472b6" : "#fb923c"}
-                      yDomain={[0, 100]}
-                    />
-                  </div>
-                </div>
-              )}
-              {zoomedSpot === 'relationships' && (
-                <div className="h-full w-full flex flex-col relative">
-                  <div className="absolute top-0 left-0 z-10">
-                    <select
-                      className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
-                      value={conflictMetric}
-                      onChange={(e) => setConflictMetric(e.target.value as 'Mental Health' | 'Daily Usage')}
-                    >
-                      <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>vs Mental Health</option>
-                      <option value="Daily Usage" className="text-white" style={{ backgroundColor: '#414053' }}>vs Daily Usage</option>
-                    </select>
-                  </div>
-                  <p className="text-md text-center mb-2">Conflicts vs {conflictMetric}</p>
-                  <div className="h-[500px]">
-                    <LineChart
-                      data={conflictMetric === 'Mental Health' ? conflictsVsMentalHealthData : conflictsVsDailyUsageData}
-                      xLabel={conflictMetric === 'Mental Health' ? "Mental Health Score" : "Daily Usage (hours)"}
-                      yLabel="Avg Conflicts"
-                      color={conflictMetric === 'Mental Health' ? "#f472b6" : "#fb923c"}
-                    />
+            {/* Info Card */}
+            {selectedSpot && (
+              <div className="
+                flex-1 
+                max-w-5xl 
+                w-full
+                bg-gray-900/80
+                backdrop-blur-md
+                border border-teal-400/40
+                text-white
+                rounded-2xl
+                p-6
+                shadow-lg
+                pointer-events-auto
+                overflow-hidden"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-teal-300 flex items-center gap-2">
+                      <button
+                        onClick={() => setZoomedSpot(null)}
+                        className="hover:text-teal-100 transition-colors focus:outline-none cursor-pointer"
+                        aria-label="Go back"
+                      >
+                        <ChevronLeft size={24} />
+                      </button>
+                      {selectedSpot.label}
+                    </h3>
                   </div>
                 </div>
-              )}
-              {zoomedSpot === 'mental-health' && (
-                <div className="h-full w-full flex flex-col relative">
-                  <div className="absolute top-0 left-0 z-10">
-                    <select
-                      className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
-                      value={mentalHealthMetric}
-                      onChange={(e) => setMentalHealthMetric(e.target.value as 'Mental Health' | 'Sleep Hours')}
-                    >
-                      <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>Mental Health</option>
-                      <option value="Sleep Hours" className="text-white" style={{ backgroundColor: '#414053' }}>Sleep Hours</option>
-                    </select>
-                  </div>
-                  <p className="text-md text-center mb-2">{mentalHealthMetric} vs Daily Usage</p>
-                  <div className="h-[500px]">
-                    <ScatterGraph
-                      data={mentalHealthMetric === 'Mental Health' ? mentalHealthVsUsageData : sleepVsUsageData}
-                      xLabel="Daily Usage (hours)"
-                      yLabel={mentalHealthMetric === 'Mental Health' ? "Mental Health Score" : "Sleep Hours"}
-                      color={mentalHealthMetric === 'Mental Health' ? "#59cccaff" : "#818cf8"}
-                    />
-                  </div>
+
+                <div className="w-full h-96 md:h-[34rem] relative">
+                  {zoomedSpot === 'academic' && (
+                    <div className="h-full w-full flex flex-col relative">
+                      <div className="absolute top-0 left-0 z-10">
+                        <select
+                          className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
+                          value={academicMetric}
+                          onChange={(e) => setAcademicMetric(e.target.value as 'Daily Usage' | 'Mental Health')}
+                        >
+                          <option value="Daily Usage" className="text-white" style={{ backgroundColor: '#414053' }}>vs Daily Usage</option>
+                          <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>vs Mental Health</option>
+                        </select>
+                      </div>
+                      <p className="text-md text-center mb-2">Negative Academic Impact vs {academicMetric}</p>
+                      <div className="h-[500px]">
+                        <LineChart
+                          data={academicMetric === 'Daily Usage' ? negativeImpactVsDailyUsageData : negativeImpactVsMentalHealthData}
+                          xLabel={academicMetric === 'Daily Usage' ? "Daily Usage (hours)" : "Mental Health Score"}
+                          yLabel="% Negatively Affected"
+                          color={academicMetric === 'Daily Usage' ? "#f472b6" : "#fb923c"}
+                          yDomain={[0, 100]}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {zoomedSpot === 'relationships' && (
+                    <div className="h-full w-full flex flex-col relative">
+                      <div className="absolute top-0 left-0 z-10">
+                        <select
+                          className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
+                          value={conflictMetric}
+                          onChange={(e) => setConflictMetric(e.target.value as 'Mental Health' | 'Daily Usage')}
+                        >
+                          <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>vs Mental Health</option>
+                          <option value="Daily Usage" className="text-white" style={{ backgroundColor: '#414053' }}>vs Daily Usage</option>
+                        </select>
+                      </div>
+                      <p className="text-md text-center mb-2">Conflicts vs {conflictMetric}</p>
+                      <div className="h-[500px]">
+                        <LineChart
+                          data={conflictMetric === 'Mental Health' ? conflictsVsMentalHealthData : conflictsVsDailyUsageData}
+                          xLabel={conflictMetric === 'Mental Health' ? "Mental Health Score" : "Daily Usage (hours)"}
+                          yLabel="Avg Conflicts"
+                          color={conflictMetric === 'Mental Health' ? "#f472b6" : "#fb923c"}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {zoomedSpot === 'mental-health' && (
+                    <div className="h-full w-full flex flex-col relative">
+                      <div className="absolute top-0 left-0 z-10">
+                        <select
+                          className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
+                          value={mentalHealthMetric}
+                          onChange={(e) => setMentalHealthMetric(e.target.value as 'Mental Health' | 'Sleep Hours')}
+                        >
+                          <option value="Mental Health" className="text-white" style={{ backgroundColor: '#414053' }}>Mental Health</option>
+                          <option value="Sleep Hours" className="text-white" style={{ backgroundColor: '#414053' }}>Sleep Hours</option>
+                        </select>
+                      </div>
+                      <p className="text-md text-center mb-2">{mentalHealthMetric} vs Daily Usage</p>
+                      <div className="h-[500px]">
+                        <ScatterGraph
+                          data={mentalHealthMetric === 'Mental Health' ? mentalHealthVsUsageData : sleepVsUsageData}
+                          xLabel="Daily Usage (hours)"
+                          yLabel={mentalHealthMetric === 'Mental Health' ? "Mental Health Score" : "Sleep Hours"}
+                          color={mentalHealthMetric === 'Mental Health' ? "#59cccaff" : "#818cf8"}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {zoomedSpot === 'geographics' && (
+                    <div className="h-full w-full flex flex-col relative">
+                      <div className="absolute top-0 left-0 z-10">
+                        <select
+                          className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
+                          value={mapMetric}
+                          onChange={(e) => setMapMetric(e.target.value as keyof StudentRecord | "Count")}
+                        >
+                          {METRIC_OPTIONS.map((m) => (
+                            <option key={m.key} value={m.key} className="text-white" style={{ backgroundColor: '#414053' }}>{m.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex-1 w-full min-h-0 flex items-center justify-center pt-8">
+                        <WorldMap studentData={filteredData} metric={mapMetric} onMetricChange={setMapMetric} hideControls />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              {zoomedSpot === 'geographics' && (
-                <div className="h-full w-full flex flex-col relative">
-                  <div className="absolute top-0 left-0 z-10">
-                    <select
-                      className="bg-white/10 border border-teal-400/30 rounded px-2 py-1 text-md text-white focus:outline-none focus:border-teal-400"
-                      value={mapMetric}
-                      onChange={(e) => setMapMetric(e.target.value as keyof StudentRecord | "Count")}
-                    >
-                      {METRIC_OPTIONS.map((m) => (
-                        <option key={m.key} value={m.key} className="text-white" style={{ backgroundColor: '#414053' }}>{m.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex-1 w-full min-h-0 flex items-center justify-center pt-8">
-                    <WorldMap studentData={filteredData} metric={mapMetric} onMetricChange={setMapMetric} hideControls />
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

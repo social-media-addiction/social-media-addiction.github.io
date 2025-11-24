@@ -228,38 +228,38 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
         .style('filter', 'url(#glow)')
         .style('cursor', 'pointer')
         .on('mouseover', function() {
-          // Select the parent wrapper group
-          const parentWrapper = d3.select(this.parentNode as Element);
+        // Select the parent wrapper group
+        const parentWrapper = d3.select(this.parentNode as Element);
+        
+        // Bring parent wrapper to front
+        parentWrapper.raise();
+        
+        // Dim all other wrappers
+        g.selectAll('.radarWrapper')
+          .transition().duration(200)
+          .style('opacity', 0.1);
           
-          // Bring parent wrapper to front
-          parentWrapper.raise();
+        // Highlight this wrapper
+        parentWrapper
+          .transition().duration(200)
+          .style('opacity', 1);
           
-          // Dim all other wrappers
-          g.selectAll('.radarWrapper')
-            .transition().duration(200)
-            .style('opacity', 0.1);
-            
-          // Highlight this wrapper
-          parentWrapper
-            .transition().duration(200)
-            .style('opacity', 1);
-            
-          // Optional: Make area more opaque
-          parentWrapper.select('.radarArea')
-            .transition().duration(200)
-            .style('fill-opacity', 0.7);
-        })
-        .on('mouseout', function() {
-          // Restore all wrappers
-          g.selectAll('.radarWrapper')
-            .transition().duration(200)
-            .style('opacity', 1);
-            
-          // Restore area opacity
-          g.selectAll('.radarArea')
-            .transition().duration(200)
-            .style('fill-opacity', opacityArea);
-        });
+        // Optional: Make area more opaque
+        parentWrapper.select('.radarArea')
+          .transition().duration(200)
+          .style('fill-opacity', 0.7);
+      })
+      .on('mouseout', function() {
+        // Restore all wrappers
+        g.selectAll('.radarWrapper')
+          .transition().duration(200)
+          .style('opacity', 1);
+          
+        // Restore area opacity
+        g.selectAll('.radarArea')
+          .transition().duration(200)
+          .style('fill-opacity', opacityArea);
+      });
 
       // Append the dots
       blobWrapper.selectAll('.radarCircle')
@@ -274,7 +274,8 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
            const parentData = d3.select(this.parentNode as Element).datum() as SpiderChartSeries;
            return parentData.color || colorScale(parentData.name);
         })
-        .style('fill-opacity', opacityDots);
+        .style('fill-opacity', opacityDots)
+        .style('pointer-events', 'none');
     }
 
     // --- Helper Functions ---
@@ -320,6 +321,7 @@ const SpiderChart: React.FC<SpiderChartProps> = ({ data, config }) => {
           <filter id="glow">
             <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
             <feMerge>
+              <feMergeNode in="coloredBlur"/>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
