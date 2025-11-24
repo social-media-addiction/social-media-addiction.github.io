@@ -257,13 +257,13 @@ export default function ExploreRoom() {
 
       {/* Left Fixed Filter Panel */}
       <AnimatePresence>
-  {zoomedSpot && (
-    <motion.div
-      initial={{ x: -40, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: -40, opacity: 0 }}
-      transition={{ duration: 0.4 }}
-      className="
+        {zoomedSpot && (
+          <motion.div
+            initial={{ x: -40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -40, opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            className="
         fixed top-1/2 left-7
         -translate-y-1/2
         w-72
@@ -277,7 +277,7 @@ export default function ExploreRoom() {
         p-6
         shadow-lg
         z-50"
-    >
+          >
             <h3 className="text-xl font-bold text-teal-300 mb-3">Filters</h3>
 
             {/* Gender */}
@@ -365,7 +365,7 @@ export default function ExploreRoom() {
         rounded-2xl
         p-6
         shadow-lg"
-    >
+          >
             <div className="flex justify-between items-start mb-4">
               <div>
                 <h3 className="text-2xl font-bold text-teal-300 flex items-center gap-2">
