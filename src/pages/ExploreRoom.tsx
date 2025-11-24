@@ -3,7 +3,6 @@ import { ReactElement, useState, useEffect, useMemo } from "react";
 import { Brain, Users, GraduationCap, Globe, ChevronLeft } from "lucide-react";
 import LineChart, { LineChartData } from "../components/LineChart";
 import ScatterGraph, { ScatterData } from '../components/ScatterGraph';
-import BarChart, { BarChartData } from '../components/BarChart';
 import bgVideo from "../assets/videos/bg-small.mp4";
 
 
